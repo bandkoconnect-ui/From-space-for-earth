@@ -17,6 +17,7 @@
       <a class="brand-mark" href="#" title="Dashboard" aria-label="Open dashboard"><span class="brand-orbit"></span><span class="brand-core"></span></a>
       <button class="rail-button active" title="Explore" aria-label="Explore" id="exploreButton"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5M10.8 7.2v7.2M7.2 10.8h7.2"/></svg></button>
       <button class="rail-button" title="My investigations" aria-label="My investigations" id="savedButton"><svg viewBox="0 0 24 24"><path d="M6 4.5h12v16l-6-3.8-6 3.8z"/></svg></button>
+      <button class="rail-button" title="Community" aria-label="Community" id="communityButton"><svg viewBox="0 0 24 24"><path d="M8.2 11.4a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="M15.8 10.3a2.6 2.6 0 1 0 0-5.2M2.8 18.8v-1.2a4.2 4.2 0 0 1 4.2-4.2h2.4a4.2 4.2 0 0 1 4.2 4.2v1.2zM15.4 13.7h1.4a4.2 4.2 0 0 1 4.2 4.2v.9h-5.1"/></svg></button>
       <div class="rail-spacer"></div>
       <button class="rail-button" title="About data" aria-label="About data" id="dataButton"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg></button>
       <div class="avatar">B</div>
@@ -31,12 +32,12 @@
 
       <div class="section-label">INVESTIGATIONS</div>
       <button class="investigation-card selected" id="nepalCard" data-key="nepal">
-        <div class="thumb nepal-thumb"><span class="thumb-tag">FIELD NOTE 001</span><span class="thumb-contour"></span></div>
+        <div class="thumb nepal-thumb"><img src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=500&q=80" alt="Himalayan river valley" loading="eager" onerror="this.onerror=null;this.src='assets/nepal-fallback.png'"><span class="thumb-shade"></span><span class="thumb-tag">FIELD NOTE 001</span><span class="thumb-contour"></span></div>
         <div class="investigation-copy"><strong>Nepal · Flash flood</strong><span>August 2026 <i class="status-dot"></i> Historical event</span></div>
         <svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
       </button>
       <button class="investigation-card" id="amazonCard" data-key="amazon">
-        <div class="thumb amazon-thumb"><span class="thumb-tag">FIELD NOTE 002</span><span class="thumb-contour"></span></div>
+        <div class="thumb amazon-thumb"><img src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=500&q=80" alt="Dense Amazon rainforest canopy" loading="eager" onerror="this.onerror=null;this.src='assets/forest-fallback.png'"><span class="thumb-shade"></span><span class="thumb-tag">FIELD NOTE 002</span><span class="thumb-contour"></span></div>
         <div class="investigation-copy"><strong>Amazon · Forest change</strong><span>Illustrative case study <i class="status-dot"></i> Land cover</span></div>
         <svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
       </button>
@@ -67,6 +68,14 @@
         <div class="dashboard-section-head"><div><div class="section-label">YOUR WORKSPACE</div><h3>My investigations</h3></div><div class="dashboard-section-actions"><button class="text-button dashboard-list-new" id="dashboardNewFromList">＋ Start an investigation</button><button class="text-button" id="dashboardViewAll">Open map view ↗</button></div></div>
         <div class="dashboard-investigations" id="dashboardInvestigations"></div>
 
+
+
+        <div class="dashboard-section-head news-head"><div><div class="section-label">PLANET PULSE · LIVE FEED</div><h3>What’s happening on Earth</h3><p>Active geospatial events from NASA EONET. This is an event feed, not editorial news.</p></div><a class="text-button" href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noreferrer">NASA EONET ↗</a></div>
+        <div class="planet-news" id="planetNews"><div class="news-loading"><span class="pulse"></span> Connecting to NASA’s open event feed…</div></div>
+        <div class="dashboard-footnote">NASA EONET event data may be delayed or incomplete. Always follow the linked source for authoritative updates.</div>
+      </section>
+      <section class="community-view" id="communityView" aria-hidden="true">
+        <div class="community-page-heading"><div><div class="eyebrow">ECHO FIELD NETWORK · 03</div><h2>Better questions.<br><span>Shared discoveries.</span></h2><p>Connect the dots with people exploring a changing planet. This is a clickable interface preview; conversations are local to this browser.</p></div><div class="community-heading-mark"><span>✳</span><small>FIELD NOTES<br>TRAVEL FURTHER</small></div></div>
         <section class="community-section" id="communitySection" aria-labelledby="communityTitle">
           <div class="community-intro">
             <div><div class="section-label">ECHO COMMUNITY · PREVIEW</div><h3 id="communityTitle">Curiosity travels further together.</h3><p>Compare notes with people who study our changing planet. This is a local, interactive preview — not a connected public network yet.</p></div>
@@ -75,7 +84,7 @@
           <div class="community-grid">
             <div class="community-main">
               <div class="community-featured">
-                <div class="community-feature-image"></div>
+                <div class="community-feature-image"><img src="https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=85" alt="Aerial view of a winding landscape" loading="eager" onerror="this.onerror=null;this.src='assets/earth-fallback.png'"><span class="image-caption">EARTH OBSERVATION · FIELD NOTES</span></div>
                 <div class="community-feature-copy"><span class="community-topic">FIELD NOTES · FLOOD & WATER</span><h4>What can a satellite tell us after the clouds clear?</h4><p>Researchers are comparing radar and optical scenes to understand what changed — and what still needs ground validation.</p><div class="community-author"><span class="community-avatar avatar-blue">AM</span><span><strong>Amara M.</strong><small>Remote sensing · 2 hours ago</small></span><span class="community-replies">12 replies</span></div></div>
               </div>
               <div class="community-threads" id="communityThreads">
@@ -97,10 +106,6 @@
           </div>
           <div class="community-bottom"><span>Built for careful questions, transparent sources and shared learning.</span><button class="text-button" id="communityGuidelines">Community principles ↗</button></div>
         </section>
-
-        <div class="dashboard-section-head news-head"><div><div class="section-label">PLANET PULSE · LIVE FEED</div><h3>What’s happening on Earth</h3><p>Active geospatial events from NASA EONET. This is an event feed, not editorial news.</p></div><a class="text-button" href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noreferrer">NASA EONET ↗</a></div>
-        <div class="planet-news" id="planetNews"><div class="news-loading"><span class="pulse"></span> Connecting to NASA’s open event feed…</div></div>
-        <div class="dashboard-footnote">NASA EONET event data may be delayed or incomplete. Always follow the linked source for authoritative updates.</div>
       </section>
       <section class="map-stage">
         <div id="map" aria-label="Interactive map of Nepal"></div>

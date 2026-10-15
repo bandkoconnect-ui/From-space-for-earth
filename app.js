@@ -251,13 +251,24 @@
   $('closeInfo').addEventListener('click',()=>closeModal(infoModal));
   infoModal.addEventListener('click',e=>{if(e.target===infoModal)closeModal(infoModal);});
   const dashboardView=$('dashboardView');
+  const communityView=$('communityView');
   const appShell=document.querySelector('.app-shell');
+  const workspace=document.querySelector('.workspace');
   const brandMark=document.querySelector('.brand-mark');
+  function clearMainViews(){
+    workspace.classList.remove('dashboard-mode','community-mode');
+    appShell.classList.remove('dashboard-mode');
+    dashboardView.classList.remove('active','investigations-only');
+    dashboardView.setAttribute('aria-hidden','true');
+    communityView.classList.remove('active');
+    communityView.setAttribute('aria-hidden','true');
+  }
   function showDashboard(view='home'){
     stopTimeline();
     const investigationsOnly=view==='investigations';
+    clearMainViews();
     document.querySelector('.breadcrumb strong').textContent=investigationsOnly?'My investigations':'Dashboard';
-    document.querySelector('.workspace').classList.add('dashboard-mode');
+    workspace.classList.add('dashboard-mode');
     appShell.classList.add('dashboard-mode');
     dashboardView.classList.add('active');
     dashboardView.classList.toggle('investigations-only',investigationsOnly);
@@ -269,12 +280,22 @@
     if(!investigationsOnly)loadPlanetPulse();
     setTimeout(()=>map.invalidateSize(),80);
   }
+  function showCommunity(){
+    stopTimeline();
+    clearMainViews();
+    workspace.classList.add('community-mode');
+    appShell.classList.add('dashboard-mode');
+    communityView.classList.add('active');
+    communityView.setAttribute('aria-hidden','false');
+    document.querySelector('.breadcrumb strong').textContent='Community';
+    document.querySelectorAll('.rail-button').forEach(b=>b.classList.remove('active'));
+    $('communityButton').classList.add('active');
+    brandMark.classList.remove('active');
+    setTimeout(()=>map.invalidateSize(),80);
+  }
   function showMap(){
+    clearMainViews();
     document.querySelector('.breadcrumb strong').textContent=active.crumb;
-    document.querySelector('.workspace').classList.remove('dashboard-mode');
-    appShell.classList.remove('dashboard-mode');
-    dashboardView.classList.remove('active','investigations-only');
-    dashboardView.setAttribute('aria-hidden','true');
     document.querySelectorAll('.rail-button').forEach(b=>b.classList.remove('active'));
     $('exploreButton').classList.add('active');
     brandMark.classList.remove('active');
@@ -286,13 +307,16 @@
     amazon:'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1200&q=85',
     custom:'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=85'
   };
+  const fallbackImages={nepal:'assets/nepal-fallback.png',amazon:'assets/forest-fallback.png',custom:'assets/earth-fallback.png'
+  };
   function renderDashboard(){
     const entries=Object.entries(investigations);$('dashboardCount').textContent=String(entries.length).padStart(2,'0');
-    $('dashboardInvestigations').innerHTML=entries.map(([key,item],i)=>{const image=caseImages[key]||caseImages.custom;const kind=key==='nepal'?'Nepal · flood & river systems':key==='amazon'?'Amazon · forest monitoring':(item.subtitle||'Earth observation').replace(/<[^>]+>/g,'');return `<button class="dashboard-investigation" data-key="${escapeHtml(key)}"><span class="dashboard-card-art ${key==='nepal'?'nepal-art':key==='amazon'?'amazon-art':'custom-art'}" style="--case-image:url('${image}')"><span>FIELD NOTE ${String(i+1).padStart(3,'0')}</span><i>↗</i><b class="case-image-caption">${escapeHtml(kind)}</b></span><span class="dashboard-card-copy"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.subtitle.replace(/<[^>]+>/g,''))}</small><em>${escapeHtml(item.isCustom?'Personal workspace':key==='nepal'?'Historical event':'Case study')}</em></span></button>`;}).join('');
+    $('dashboardInvestigations').innerHTML=entries.map(([key,item],i)=>{const image=caseImages[key]||caseImages.custom;const kind=key==='nepal'?'Nepal · flood & river systems':key==='amazon'?'Amazon · forest monitoring':(item.subtitle||'Earth observation').replace(/<[^>]+>/g,'');return `<button class="dashboard-investigation" data-key="${escapeHtml(key)}"><span class="dashboard-card-art ${key==='nepal'?'nepal-art':key==='amazon'?'amazon-art':'custom-art'}"><img class="case-photo" src="${image}" alt="${escapeHtml(kind)}" loading="eager" onerror="this.onerror=null;this.src='${fallbackImages[key]||fallbackImages.custom}'"><span class="image-scrim"></span><span>FIELD NOTE ${String(i+1).padStart(3,'0')}</span><i>↗</i><b class="case-image-caption">${escapeHtml(kind)}</b></span><span class="dashboard-card-copy"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.subtitle.replace(/<[^>]+>/g,''))}</small><em>${escapeHtml(item.isCustom?'Personal workspace':key==='nepal'?'Historical event':'Case study')}</em></span></button>`;}).join('');
   }
   function selectInvestigation(key){if(!investigations[key])return;stopTimeline();activeKey=key;active=investigations[key];timeline.value=key==='nepal'?'2':(investigations[key].isCustom?'3':'2');timeline.max='3';showMap();renderInvestigation();$('echo-context').innerHTML=`<span class="live-dot"></span> CONTEXT: ${escapeHtml(active.crumb.toUpperCase())} · ${escapeHtml(active.id)}`;toast(`${active.title} opened`);}
   $('exploreButton').addEventListener('click',showMap);
   $('savedButton').addEventListener('click',()=>showDashboard('investigations'));
+  $('communityButton').addEventListener('click',showCommunity);
   document.querySelector('.brand-mark').addEventListener('click',e=>{e.preventDefault();showDashboard('home');});
   document.querySelector('.sidebar').addEventListener('click',e=>{const card=e.target.closest('.investigation-card');if(card&&card.dataset.key)selectInvestigation(card.dataset.key);});
   $('dashboardInvestigations').addEventListener('click',e=>{const card=e.target.closest('.dashboard-investigation');if(card)selectInvestigation(card.dataset.key);});
@@ -320,7 +344,7 @@
     const topicLabel=({environment:'Environmental change',flood:'Water and flood watch',forest:'Forest change',fire:'Wildfire monitoring',urban:'Urban growth',other:'Earth observation'})[topic]||'Earth observation';
     const item={id:String(Object.keys(investigations).length+1).padStart(3,'0'),title,crumb:title,mapTitle:'A new question.<br/>A changing planet.',subtitle:`${lat.toFixed(3)}°, ${lng.toFixed(3)}° <span>·</span> ${topicLabel}`,legend:'Area to investigate',legendSub:'No automated change detection has been run',center:[lat,lng],zoom:7,isCustom:true,topic,points:[{name:'Selected location',point:[lat,lng],type:'User-defined area of interest'},{name:'Northwest context',point:[Math.min(84,lat+.12),lng-.15],type:'Nearby context · inspect imagery'},{name:'Southeast context',point:[Math.max(-84,lat-.12),lng+.15],type:'Nearby context · inspect imagery'}],dates,evidence:[['NASA','NASA GIBS imagery','Daily MODIS true-colour composite','https://nasa-gibs.github.io/gibs-api-docs/'],['EU','Copernicus Data Space','Sentinel archive for higher-resolution follow-up','https://dataspace.copernicus.eu/'],['EONET','NASA EONET','Active Earth events','https://eonet.gsfc.nasa.gov/']],pointsHtml:[['Inspect available imagery','Check dates, cloud cover and native resolution.'],['Compare change signals','Treat visible differences as hypotheses, not verified change.'],['Validate with source data','Use higher-resolution sources and independent reference data.']],sourceText:'This is a new user-created investigation workspace. NASA MODIS imagery can provide broad context, but no event detection or change measurement has been run.'};
     investigations[key]=item;try{localStorage.setItem('echo-custom-investigations',JSON.stringify(Object.fromEntries(Object.entries(investigations).filter(([k,v])=>v.isCustom))));}catch(_){}
-    const card=document.createElement('button');card.className='investigation-card';card.dataset.key=key;card.innerHTML=`<div class="thumb custom-thumb"><span class="thumb-tag">FIELD NOTE ${item.id}</span><span class="thumb-contour"></span></div><div class="investigation-copy"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(topicLabel)} <i class="status-dot"></i> Personal workspace</span></div><svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>`;$('newInvestigation').before(card);
+    const card=document.createElement('button');card.className='investigation-card';card.dataset.key=key;card.innerHTML=`<div class="thumb custom-thumb"><img src="https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=500&q=80" alt="Forest landscape" loading="eager" onerror="this.onerror=null;this.src='assets/earth-fallback.png'"><span class="thumb-shade"></span><span class="thumb-tag">FIELD NOTE ${item.id}</span><span class="thumb-contour"></span></div><div class="investigation-copy"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(topicLabel)} <i class="status-dot"></i> Personal workspace</span></div><svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>`;$('newInvestigation').before(card);
     closeModal(newInvestigationModal);$('newInvestigationForm').reset();$('newLat').value=lat;$('newLng').value=lng;renderDashboard();selectInvestigation(key);toast('Investigation created in this browser');
   });
   let planetPulseLoaded=false;
@@ -388,7 +412,7 @@
   // Keep the report panel reachable on narrower screens.
   if(window.matchMedia('(max-width: 1250px)').matches){const crumb=document.querySelector('.breadcrumb');crumb.style.cursor='pointer';crumb.title='Open field report';crumb.addEventListener('click',showInspector);}
   $('echo-context').innerHTML=`<span class="live-dot"></span> CONTEXT: ${active.crumb.toUpperCase()} · ${active.id}`;
-  Object.entries(investigations).filter(([key,item])=>item.isCustom).forEach(([key,item])=>{const card=document.createElement('button');card.className='investigation-card';card.dataset.key=key;card.innerHTML=`<div class="thumb custom-thumb"><span class="thumb-tag">FIELD NOTE ${escapeHtml(item.id)}</span><span class="thumb-contour"></span></div><div class="investigation-copy"><strong>${escapeHtml(item.title)}</strong><span>Personal workspace <i class="status-dot"></i> Custom</span></div><svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>`;$('newInvestigation').before(card);});
+  Object.entries(investigations).filter(([key,item])=>item.isCustom).forEach(([key,item])=>{const card=document.createElement('button');card.className='investigation-card';card.dataset.key=key;card.innerHTML=`<div class="thumb custom-thumb"><img src="https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=500&q=80" alt="Forest landscape" loading="eager" onerror="this.onerror=null;this.src='assets/earth-fallback.png'"><span class="thumb-shade"></span><span class="thumb-tag">FIELD NOTE ${escapeHtml(item.id)}</span><span class="thumb-contour"></span></div><div class="investigation-copy"><strong>${escapeHtml(item.title)}</strong><span>Personal workspace <i class="status-dot"></i> Custom</span></div><svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>`;$('newInvestigation').before(card);});
   addMarkers();drawEventLayer();setDate(2,false);setCompare(50);renderDashboard();loadPlanetPulse();
   window.addEventListener('resize',()=>map.invalidateSize());
 })();

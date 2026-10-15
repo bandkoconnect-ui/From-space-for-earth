@@ -76,3 +76,13 @@ Community content is sample content designed to demonstrate the experience. The 
 ### Images
 
 Photography is hotlinked from `images.unsplash.com`; image availability depends on Unsplash's image hosting and internet connectivity. The images are illustrative editorial photography, not evidence or satellite observations. For an app using the official Unsplash API, follow its API hotlinking and attribution requirements.
+
+
+## ECHO interface correction (v6)
+
+- Community is a dedicated page opened from the new Community icon in the left rail. It is not shown anywhere on the dashboard.
+- Investigation cards, sidebar thumbnails and the featured Community image use Unsplash photography when available. Local PNG terrain illustrations are used automatically if a remote image cannot load, so these image areas never remain blank. The local illustrations are visual fallbacks, not satellite evidence.
+- Existing map, timeline, layer controls, investigation selection, export and Ask ECHO flows are retained.
+- Community conversations are still a local interaction preview, not a shared real-time network.
+
+For the next product phase, persistent cross-device investigations require an authenticated backend and database; actual change analysis requires a processing pipeline built around licensed/accessible source scenes, quality masks and validation; a connected community requires accounts, shared storage/realtime messaging, reporting/moderation and privacy controls. These are not enabled by this interface-only update.
