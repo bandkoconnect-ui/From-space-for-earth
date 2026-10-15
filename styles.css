@@ -23,3 +23,34 @@
 .create-card{width:min(450px,100%)}.create-form{display:flex;flex-direction:column;gap:14px;margin-top:16px}.create-form label{display:flex;flex-direction:column;gap:7px;color:#9aabb4;font-size:10px}.create-form input,.create-form select{width:100%;min-height:40px;border:1px solid #344751;border-radius:8px;background:#0d171f;color:#edf3f7;padding:10px 11px;font:11px var(--sans);outline:none}.create-form input:focus,.create-form select:focus{border-color:#81c4a4}.coordinate-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.create-form .primary-button{align-self:flex-start;padding:0 16px;margin-top:3px}
 @media(max-width:1000px){.dashboard-view{padding:20px 18px}.planet-news{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-orbit{right:-160px}}
 @media(max-width:760px){.dashboard-view{padding:16px 12px 24px}.dashboard-hero{padding:22px 18px;min-height:190px}.dashboard-hero h2{font-size:28px}.dashboard-orbit{right:-245px}.dashboard-stats{gap:6px}.dashboard-stats>div{padding:11px 9px}.dashboard-stats span{font-size:7px;letter-spacing:.3px}.dashboard-stats strong{font-size:13px}.dashboard-investigations{grid-template-columns:1fr}.dashboard-card-art{height:90px}.planet-news{grid-template-columns:1fr}.planet-news-card{min-height:108px}.dashboard-section-head h3{font-size:17px}.compare-label{top:9px;font-size:7px;padding:6px 7px}.before-label{left:8px}.after-label{right:8px}.compare-source{font-size:6px;letter-spacing:.2px}.map-compare input{bottom:18px}}
+
+/* ECHO v3.1 — dashboard navigation split and full-map NASA swipe repair */
+.app-shell.dashboard-mode{grid-template-columns:64px minmax(0,1fr)}
+.app-shell.dashboard-mode .sidebar,
+.app-shell.dashboard-mode .inspector{display:none!important}
+.app-shell.dashboard-mode .workspace{grid-column:2;min-width:0}
+.brand-mark.active{filter:drop-shadow(0 0 9px #9af3c655)}
+.dashboard-section-actions{display:flex;align-items:center;gap:18px}
+.dashboard-list-new{display:none}
+.dashboard-view.investigations-only .dashboard-hero,
+.dashboard-view.investigations-only .dashboard-stats,
+.dashboard-view.investigations-only .news-head,
+.dashboard-view.investigations-only .planet-news,
+.dashboard-view.investigations-only .dashboard-footnote{display:none!important}
+.dashboard-view.investigations-only .dashboard-section-head:not(.news-head){margin-top:4px;margin-bottom:18px}
+.dashboard-view.investigations-only .dashboard-list-new{display:inline-block}
+.dashboard-view.investigations-only .dashboard-investigations{margin-bottom:0}
+.dashboard-stats>div:nth-child(2) strong{font-size:12px;line-height:1.5}
+.dashboard-stats small{font-size:9px;line-height:1.5;color:#82949e}
+.dashboard-stats small a{color:#a5d9c1;text-decoration:none}
+.dashboard-stats small a:hover{text-decoration:underline}
+/* Keep the comparison controls transparent over the real map tiles. The previous
+   centered card background obscured the NASA layers and made the map look blank. */
+.map-compare{position:absolute!important;inset:0!important;left:0!important;top:0!important;transform:none!important;width:auto!important;height:auto!important;min-height:0!important;max-width:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;overflow:hidden!important;pointer-events:none!important}
+.map-compare.open{display:block!important}
+.map-compare .compare-label{pointer-events:none}
+.map-compare .compare-divider{pointer-events:none}
+.map-compare .compare-source{pointer-events:none}
+.map-compare input{pointer-events:auto!important;left:16px!important;right:16px!important;bottom:22px!important;width:calc(100% - 32px)!important}
+@media(max-width:1250px){.app-shell.dashboard-mode{grid-template-columns:56px minmax(0,1fr)}.app-shell.dashboard-mode .workspace{grid-column:2}}
+@media(max-width:760px){.app-shell.dashboard-mode{grid-template-columns:48px minmax(0,1fr)}.app-shell.dashboard-mode .workspace{grid-column:2}.dashboard-section-actions{gap:10px}.dashboard-list-new{font-size:9px}}

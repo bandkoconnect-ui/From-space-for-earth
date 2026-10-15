@@ -1,6 +1,6 @@
-# ECHO — Earth Intelligence for Everyone (v3)
+# ECHO — Earth Intelligence for Everyone (v3.1)
 
-An iPad-first, responsive Earth-observation investigation prototype. This version adds a real date-specific NASA satellite-imagery swipe, a personal investigations dashboard, a create-investigation flow, and a live NASA EONET active-events feed.
+An iPad-first, responsive Earth-observation investigation prototype. This version preserves the v3 investigation workflow and adds a separated Dashboard / My investigations navigation, hides the map layers and field report while browsing dashboard views, lists Planet Labs as a data source, and repairs the in-map NASA imagery comparison.
 
 ## Run / publish
 
@@ -11,11 +11,11 @@ An iPad-first, responsive Earth-observation investigation prototype. This versio
 
 No build step or API key is required. The app needs an internet connection for Leaflet, Esri satellite tiles, NASA GIBS imagery and the NASA EONET feed.
 
-## What changed in v3
+## What changed in v3.1
 
-- **Satellite imagery comparison:** the swipe uses dated NASA GIBS MODIS Terra corrected-reflectance true-colour daily composites. The before side uses the first investigation date; the after side follows the timeline selection. Swipe clipping is applied to a Leaflet map pane, so moving the date slider changes the imagery date but does not pan or zoom the map.
+- **NASA comparison repair:** the before/after layers now use NASA GIBS WMS with its documented TIME parameter. The comparison controls are transparent across the map so they no longer cover the imagery with an opaque card. The before side uses the first investigation date; the after side follows the timeline selection. Moving the date slider changes the requested imagery date only and does not pan or zoom the map.
 - **Satellite-first map:** the English street-map layer has been removed from the layer picker. Esri World Imagery is the default basemap.
-- **Dashboard:** “My investigations” includes cards for saved investigations, counts, a new-investigation action and Planet Pulse.
+- **Dashboard navigation:** click the top-left ECHO mark for the full dashboard (investigations, summary and Planet Pulse). Click the bookmark/investigations icon for a focused My investigations view. Both dashboard views hide the map-layer sidebar and field report. The data-source summary includes NASA, Esri and Planet Labs; Planet imagery is commercial and requires appropriate access/licensing.
 - **Create an investigation:** enter a title, topic and latitude/longitude. The workspace is saved in browser local storage and can be revisited on the same browser/device.
 - **Planet Pulse:** loads active Earth events from NASA EONET when online and links out to the event source. This is an event feed, not a journalistic news feed.
 - **Ask ECHO:** the existing evidence-led chat UI remains. Responses are still predefined demo responses, not a live language model.
@@ -43,3 +43,10 @@ New investigations are saved in browser local storage only. They are not synced 
 ## Licensing
 
 Third-party libraries, map tiles, imagery and event data remain subject to their respective licenses, terms and attribution requirements.
+
+
+## Known limits
+
+- NASA GIBS imagery is served online and may be unavailable for a specific date, tile or region; clouds and missing observations can occur. The comparison uses MODIS Terra imagery, which is coarse compared with Sentinel-2 or commercial Planet imagery.
+- Planet Labs is listed as a potential source, but this static GitHub Pages app is not connected to a Planet API or account.
+- The flood and forest polygons remain illustrative. No verified flood delineation, deforestation detection, or live AI analysis is performed.

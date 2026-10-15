@@ -14,9 +14,9 @@
 <body>
   <div class="app-shell">
     <aside class="rail">
-      <a class="brand-mark" href="#" aria-label="ECHO home"><span class="brand-orbit"></span><span class="brand-core"></span></a>
+      <a class="brand-mark" href="#" title="Dashboard" aria-label="Open dashboard"><span class="brand-orbit"></span><span class="brand-core"></span></a>
       <button class="rail-button active" title="Explore" aria-label="Explore" id="exploreButton"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5M10.8 7.2v7.2M7.2 10.8h7.2"/></svg></button>
-      <button class="rail-button" title="Saved investigations" aria-label="Saved investigations" id="savedButton"><svg viewBox="0 0 24 24"><path d="M6 4.5h12v16l-6-3.8-6 3.8z"/></svg></button>
+      <button class="rail-button" title="My investigations" aria-label="My investigations" id="savedButton"><svg viewBox="0 0 24 24"><path d="M6 4.5h12v16l-6-3.8-6 3.8z"/></svg></button>
       <div class="rail-spacer"></div>
       <button class="rail-button" title="About data" aria-label="About data" id="dataButton"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg></button>
       <div class="avatar">B</div>
@@ -63,8 +63,8 @@
 
       <section class="dashboard-view" id="dashboardView" aria-hidden="true">
         <div class="dashboard-hero"><div class="eyebrow">YOUR EARTH DESK · 01</div><h2>Your investigations.<br><span>A changing planet.</span></h2><p>Keep your questions, evidence and places of interest in one place.</p><button class="primary-button" id="dashboardNewInvestigation"><span>＋</span> Start an investigation</button><div class="dashboard-orbit"></div></div>
-        <div class="dashboard-stats"><div><span>ACTIVE INVESTIGATIONS</span><strong id="dashboardCount">02</strong></div><div><span>DATA SOURCE</span><strong>NASA + ESRI</strong></div><div><span>WORKSPACE</span><strong>Evidence-led</strong></div></div>
-        <div class="dashboard-section-head"><div><div class="section-label">YOUR WORKSPACE</div><h3>My investigations</h3></div><button class="text-button" id="dashboardViewAll">Open map view ↗</button></div>
+        <div class="dashboard-stats"><div><span>ACTIVE INVESTIGATIONS</span><strong id="dashboardCount">02</strong></div><div><span>DATA SOURCES</span><strong>NASA · Esri · Planet Labs</strong><small><a href="https://www.planet.com/" target="_blank" rel="noreferrer">Planet Labs ↗</a> · commercial imagery requires suitable access</small></div><div><span>WORKSPACE</span><strong>Evidence-led</strong></div></div>
+        <div class="dashboard-section-head"><div><div class="section-label">YOUR WORKSPACE</div><h3>My investigations</h3></div><div class="dashboard-section-actions"><button class="text-button dashboard-list-new" id="dashboardNewFromList">＋ Start an investigation</button><button class="text-button" id="dashboardViewAll">Open map view ↗</button></div></div>
         <div class="dashboard-investigations" id="dashboardInvestigations"></div>
         <div class="dashboard-section-head news-head"><div><div class="section-label">PLANET PULSE · LIVE FEED</div><h3>What’s happening on Earth</h3><p>Active geospatial events from NASA EONET. This is an event feed, not editorial news.</p></div><a class="text-button" href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noreferrer">NASA EONET ↗</a></div>
         <div class="planet-news" id="planetNews"><div class="news-loading"><span class="pulse"></span> Connecting to NASA’s open event feed…</div></div>
@@ -76,7 +76,7 @@
         <div class="map-heading"><div class="live-label"><span class="live-dot"></span> EARTH REWIND</div><h2 id="mapTitle">When the river<br/>rewrote the map.</h2><p id="mapSubtitle">Central Nepal <span>·</span> August 2026</p></div>
         <div class="map-tools"><button class="map-tool" id="zoomIn" aria-label="Zoom in">＋</button><button class="map-tool" id="zoomOut" aria-label="Zoom out">−</button><span class="tool-separator"></span><button class="map-tool compass" id="resetView" title="Reset map view" aria-label="Reset map view">⌖</button></div>
         <div class="map-legend"><span class="legend-swatch"></span><span><strong id="legendTitle">Potential inundation</strong><small id="legendSubtitle">Conceptual overlay · not a validated flood map</small></span></div>
-        <div class="map-compare" id="mapCompare" aria-hidden="true"><div class="compare-label before-label" id="beforeLabel">BEFORE · 12 AUG 2026</div><div class="compare-label after-label" id="afterLabel">AFTER · 27 AUG 2026</div><div class="compare-divider" id="compareDivider"><span>↔</span></div><input type="range" id="compareSlider" min="0" max="100" value="50" aria-label="Slide to compare before and after satellite imagery" /><div class="compare-source">NASA GIBS · MODIS TRUE COLOUR · DAILY COMPOSITE</div></div>
+        <div class="map-compare" id="mapCompare" aria-hidden="true"><div class="compare-label before-label" id="beforeLabel">BEFORE · 12 AUG 2026</div><div class="compare-label after-label" id="afterLabel">AFTER · 27 AUG 2026</div><div class="compare-divider" id="compareDivider"><span>↔</span></div><input type="range" id="compareSlider" min="0" max="100" value="50" aria-label="Slide to compare before and after satellite imagery" /><div class="compare-source" id="compareSource">NASA GIBS · MODIS TRUE COLOUR · DAILY COMPOSITE</div></div>
         <div class="map-attribution">Imagery © <a href="https://www.esri.com/en-us/arcgis/products/arcgis-imagery" target="_blank" rel="noreferrer">Esri</a> · comparison imagery © <a href="https://earthdata.nasa.gov/" target="_blank" rel="noreferrer">NASA GIBS</a></div>
         <div class="coordinate-chip"><span class="coord-icon">⌖</span><span id="coordinates">27.7172° N, 85.3240° E</span></div>
       </section>

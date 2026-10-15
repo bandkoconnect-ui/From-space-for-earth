@@ -18,15 +18,43 @@
   map.createPane('nasaBeforePane'); map.getPane('nasaBeforePane').style.zIndex = 410;
   map.createPane('nasaAfterPane'); map.getPane('nasaAfterPane').style.zIndex = 420;
   map.getPane('nasaAfterPane').style.clipPath = 'inset(0 0 0 50%)';
-  const GIBS_BASE = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/';
-  const nasaBeforeTiles = L.tileLayer('', { pane:'nasaBeforePane', maxZoom:19, maxNativeZoom:9, opacity:1, attribution:'NASA Global Imagery Browse Services (GIBS) · MODIS Terra' });
-  const nasaAfterTiles = L.tileLayer('', { pane:'nasaAfterPane', maxZoom:19, maxNativeZoom:9, opacity:1, attribution:'NASA Global Imagery Browse Services (GIBS) · MODIS Terra' });
+  const GIBS_WMS = 'https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi';
+  const GIBS_LAYER = 'MODIS_Terra_CorrectedReflectance_TrueColor';
+  // Use NASA's documented WMS TIME dimension instead of composing WMTS tile URLs.
+  // WMS is more tolerant of date changes and lets Leaflet request the correct tile bounds.
+  const nasaWmsOptions = { layers:GIBS_LAYER, styles:'', format:'image/png', transparent:false, version:'1.1.1', time:'2026-08-12', uppercase:false, pane:'nasaBeforePane', attribution:'NASA Global Imagery Browse Services (GIBS) · MODIS Terra', crossOrigin:true, keepBuffer:2 };
+  const nasaBeforeTiles = L.tileLayer.wms(GIBS_WMS, {...nasaWmsOptions, pane:'nasaBeforePane'});
+  const nasaAfterTiles = L.tileLayer.wms(GIBS_WMS, {...nasaWmsOptions, pane:'nasaAfterPane'});
+  let nasaTileErrorNotified = false;
+  function handleNasaTileError() {
+    $('compareSource').textContent = 'NASA GIBS · some imagery tiles unavailable';
+    if (!nasaTileErrorNotified) {
+      nasaTileErrorNotified = true;
+      toast('Some NASA imagery tiles could not load. Try another date or zoom level.');
+    }
+  }
+  function handleNasaTileLoad() {
+    $('compareSource').textContent = 'NASA GIBS · MODIS TRUE COLOUR · DAILY COMPOSITE';
+    nasaTileErrorNotified = false;
+  }
+  nasaBeforeTiles.on('tileerror', handleNasaTileError);
+  nasaAfterTiles.on('tileerror', handleNasaTileError);
+  nasaBeforeTiles.on('tileload', handleNasaTileLoad);
+  nasaAfterTiles.on('tileload', handleNasaTileLoad);
+  function toIsoDate(displayDate) {
+    const match = String(displayDate).match(/^(\d{2}) ([A-Z]{3}) (\d{4})$/);
+    if (!match) return new Date().toISOString().slice(0,10);
+    const months = {JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'};
+    return `${match[3]}-${months[match[2]] || '01'}-${match[1]}`;
+  }
   function setNasaDateLayers() {
-    const beforeDate = active.dates[0].date.split(' ').reverse().join('-').replace(/([A-Z]{3})/, m => ({JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'}[m] || m));
-    const selectedDate = active.dates[Number(document.getElementById('timeline')?.value || 2)].date;
-    const afterDate = selectedDate.split(' ').reverse().join('-').replace(/([A-Z]{3})/, m => ({JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'}[m] || m));
-    nasaBeforeTiles.setUrl(`${GIBS_BASE}${beforeDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`);
-    nasaAfterTiles.setUrl(`${GIBS_BASE}${afterDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`);
+    const beforeDate = toIsoDate(active.dates[0].date);
+    const selectedDate = active.dates[Number($('timeline')?.value || 2)].date;
+    const afterDate = toIsoDate(selectedDate);
+    nasaBeforeTiles.setParams({time:beforeDate}, false);
+    nasaAfterTiles.setParams({time:afterDate}, false);
+    if (map.hasLayer(nasaBeforeTiles)) nasaBeforeTiles.redraw();
+    if (map.hasLayer(nasaAfterTiles)) nasaAfterTiles.redraw();
     $('beforeLabel').textContent = `BEFORE · ${active.dates[0].date}`;
     $('afterLabel').textContent = `AFTER · ${selectedDate}`;
   }
@@ -223,8 +251,35 @@
   $('closeInfo').addEventListener('click',()=>closeModal(infoModal));
   infoModal.addEventListener('click',e=>{if(e.target===infoModal)closeModal(infoModal);});
   const dashboardView=$('dashboardView');
-  function showDashboard(){stopTimeline();document.querySelector('.breadcrumb strong').textContent='My investigations';document.querySelector('.workspace').classList.add('dashboard-mode');dashboardView.classList.add('active');dashboardView.setAttribute('aria-hidden','false');document.querySelectorAll('.rail-button').forEach(b=>b.classList.remove('active'));$('savedButton').classList.add('active');renderDashboard();loadPlanetPulse();setTimeout(()=>map.invalidateSize(),80);}
-  function showMap(){document.querySelector('.breadcrumb strong').textContent=active.crumb;document.querySelector('.workspace').classList.remove('dashboard-mode');dashboardView.classList.remove('active');dashboardView.setAttribute('aria-hidden','true');document.querySelectorAll('.rail-button').forEach(b=>b.classList.remove('active'));$('exploreButton').classList.add('active');setTimeout(()=>map.invalidateSize(),80);}
+  const appShell=document.querySelector('.app-shell');
+  const brandMark=document.querySelector('.brand-mark');
+  function showDashboard(view='home'){
+    stopTimeline();
+    const investigationsOnly=view==='investigations';
+    document.querySelector('.breadcrumb strong').textContent=investigationsOnly?'My investigations':'Dashboard';
+    document.querySelector('.workspace').classList.add('dashboard-mode');
+    appShell.classList.add('dashboard-mode');
+    dashboardView.classList.add('active');
+    dashboardView.classList.toggle('investigations-only',investigationsOnly);
+    dashboardView.setAttribute('aria-hidden','false');
+    document.querySelectorAll('.rail-button').forEach(b=>b.classList.remove('active'));
+    $('savedButton').classList.toggle('active',investigationsOnly);
+    brandMark.classList.toggle('active',!investigationsOnly);
+    renderDashboard();
+    if(!investigationsOnly)loadPlanetPulse();
+    setTimeout(()=>map.invalidateSize(),80);
+  }
+  function showMap(){
+    document.querySelector('.breadcrumb strong').textContent=active.crumb;
+    document.querySelector('.workspace').classList.remove('dashboard-mode');
+    appShell.classList.remove('dashboard-mode');
+    dashboardView.classList.remove('active','investigations-only');
+    dashboardView.setAttribute('aria-hidden','true');
+    document.querySelectorAll('.rail-button').forEach(b=>b.classList.remove('active'));
+    $('exploreButton').classList.add('active');
+    brandMark.classList.remove('active');
+    setTimeout(()=>map.invalidateSize(),80);
+  }
   function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function renderDashboard(){
     const entries=Object.entries(investigations);$('dashboardCount').textContent=String(entries.length).padStart(2,'0');
@@ -232,13 +287,14 @@
   }
   function selectInvestigation(key){if(!investigations[key])return;stopTimeline();activeKey=key;active=investigations[key];timeline.value=key==='nepal'?'2':(investigations[key].isCustom?'3':'2');timeline.max='3';showMap();renderInvestigation();toast(`${active.title} opened`);}
   $('exploreButton').addEventListener('click',showMap);
-  $('savedButton').addEventListener('click',showDashboard);
-  document.querySelector('.brand-mark').addEventListener('click',e=>{e.preventDefault();showDashboard();});
+  $('savedButton').addEventListener('click',()=>showDashboard('investigations'));
+  document.querySelector('.brand-mark').addEventListener('click',e=>{e.preventDefault();showDashboard('home');});
   document.querySelector('.sidebar').addEventListener('click',e=>{const card=e.target.closest('.investigation-card');if(card&&card.dataset.key)selectInvestigation(card.dataset.key);});
   $('dashboardInvestigations').addEventListener('click',e=>{const card=e.target.closest('.dashboard-investigation');if(card)selectInvestigation(card.dataset.key);});
   $('dashboardViewAll').addEventListener('click',showMap);
   $('newInvestigation').addEventListener('click',()=>openModal(newInvestigationModal));
   $('dashboardNewInvestigation').addEventListener('click',()=>openModal(newInvestigationModal));
+  $('dashboardNewFromList').addEventListener('click',()=>openModal(newInvestigationModal));
 
   const inspector=$('inspector');
   function showInspector(){inspector.classList.add('open');}
