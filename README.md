@@ -1,48 +1,45 @@
-# ECHO — Earth Intelligence for Everyone
+# ECHO — Earth Intelligence for Everyone (v3)
 
-An iPad-first, responsive front-end prototype for exploring investigation workflows around Earth-observation data. This iteration improves the map controls, makes the timeline visible and interactive, adds an in-map draggable before/after reveal, and includes a second Amazon forest-change case study.
+An iPad-first, responsive Earth-observation investigation prototype. This version adds a real date-specific NASA satellite-imagery swipe, a personal investigations dashboard, a create-investigation flow, and a live NASA EONET active-events feed.
 
-## Run it
+## Run / publish
 
 1. Extract the ZIP.
-2. Open `index.html` in a browser, or upload all files to the root of a GitHub repository.
-3. In GitHub, open **Settings → Pages**, select **Deploy from a branch**, choose `main` and `/ (root)`, then save.
-4. Open the published URL on iPad Safari. Use **Share → Add to Home Screen** to install it as a web app shortcut.
+2. Upload the contents of this folder to the root of a GitHub repository (replace the prior `index.html`, `styles.css`, `app.js`, and `README.md`).
+3. In GitHub, open **Settings → Pages**, select **Deploy from a branch**, choose `main` and `/(root)`, then save.
+4. Open the published URL in iPad Safari. Use **Share → Add to Home Screen** to install the web app shortcut.
 
-The app uses Leaflet, CARTO basemap tiles and Esri World Imagery from external CDNs/services, so an internet connection is needed. There is no build step and no API key required for this demo. English-forward map styling is used where supported; proper place names may remain in their locally established form.
+No build step or API key is required. The app needs an internet connection for Leaflet, Esri satellite tiles, NASA GIBS imagery and the NASA EONET feed.
 
-## What works in this prototype
+## What changed in v3
 
-- Pan and zoom the map for two selectable investigations: Nepal flood and Amazon forest-change case study
-- Map layer toggles for an English-forward street map, Esri satellite imagery, an illustrative event overlay, investigation points and illustrative rainfall context
-- Visible, draggable event timeline with date labels, map movement and playback
-- Before/after comparison revealed by a slider directly over the map (no separate tab or modal)
-- Expanded right-side investigation report with evidence links, interpretation notes and clickable next-step investigation points
-- Evidence-led Ask ECHO panel preserved, with predefined responses and source links
-- Exportable JSON investigation snapshot
-- Responsive iPad, desktop and mobile layouts
+- **Satellite imagery comparison:** the swipe uses dated NASA GIBS MODIS Terra corrected-reflectance true-colour daily composites. The before side uses the first investigation date; the after side follows the timeline selection. Swipe clipping is applied to a Leaflet map pane, so moving the date slider changes the imagery date but does not pan or zoom the map.
+- **Satellite-first map:** the English street-map layer has been removed from the layer picker. Esri World Imagery is the default basemap.
+- **Dashboard:** “My investigations” includes cards for saved investigations, counts, a new-investigation action and Planet Pulse.
+- **Create an investigation:** enter a title, topic and latitude/longitude. The workspace is saved in browser local storage and can be revisited on the same browser/device.
+- **Planet Pulse:** loads active Earth events from NASA EONET when online and links out to the event source. This is an event feed, not a journalistic news feed.
+- **Ask ECHO:** the existing evidence-led chat UI remains. Responses are still predefined demo responses, not a live language model.
+- **Export:** download a JSON snapshot of the active investigation and selected layers.
 
-## Important data honesty note
+## Data and limitations
 
-The flood polygon, Amazon focus-area polygon, rainfall circles, and before/after comparison artwork are **illustrative UI demo graphics**. They are not satellite imagery, are not generated from satellite pixels, and are not validated flood or forest-change results. The timeline is a conceptual investigation timeline, not a live archive query. The assistant uses predefined demo responses; it is not connected to a language model or satellite-processing backend. The satellite imagery layer is a third-party basemap, not a specific event's before/after imagery. Do not use this prototype for emergency decisions or operational analysis.
+NASA GIBS provides actual date-specific **MODIS true-colour daily composite imagery**, not high-resolution Sentinel-2 scene products. MODIS native resolution is coarse (about 250–500 m depending on bands); cloud cover, missing daily coverage and composite processing can obscure details. The image layer is useful for broad context, not precise flood boundaries. The selected dates may show little or no useful local detail if coverage is cloudy or missing.
 
-The Nepal report links to ESA's published event context. The Amazon case is a sample workflow only and does not claim that deforestation occurred in the displayed focus areas.
+The Nepal flood polygon, Amazon focus-area polygon, rainfall circles, and some investigation points remain **illustrative**. They are not generated from satellite pixels and are not validated flood, damage, rainfall or forest-change results. The app does not run segmentation, change detection, area calculations or operational forecasts. Higher-resolution Sentinel-2/Sentinel-1 analysis would require a proper scene search/download and processing workflow (for example via Copernicus Data Space/STAC); authenticated commercial imagery may require a service account and license.
 
-## Suggested next engineering milestone
+New investigations are saved in browser local storage only. They are not synced to GitHub, across devices, or across browsers. The EONET feed and imagery rely on external services, so availability and response time may vary. Do not use this prototype for emergency response or operational decisions.
 
-Connect a real STAC/Copernicus data source, retrieve actual pre-event and post-event scenes, implement reproducible flood/change detection, and replace illustrative geometry with a versioned result recording source scene IDs, acquisition timestamps, processing parameters, validation notes and uncertainty.
+## Sources
 
-## Data links
-
-- ESA Nepal flash-flood report: https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-2/Nepal_flash_flood_imaged_by_satellites
+- NASA GIBS documentation: https://nasa-gibs.github.io/gibs-api-docs/
+- NASA Worldview: https://worldview.earthdata.nasa.gov/
+- NASA EONET active events: https://eonet.gsfc.nasa.gov/
 - Copernicus Data Space: https://dataspace.copernicus.eu/
+- ESA Nepal event report: https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-2/Nepal_flash_flood_imaged_by_satellites
 - NASA GPM / IMERG: https://gpm.nasa.gov/data/imerg
-- Global Forest Watch: https://www.globalforestwatch.org/
+- Esri World Imagery: https://www.esri.com/en-us/arcgis/products/arcgis-imagery
 - Planet Data API documentation: https://docs.planet.com/develop/apis/data/
-- OpenStreetMap attribution and license: https://www.openstreetmap.org/copyright
-- CARTO attribution: https://carto.com/attributions
-- Esri World Imagery attribution: https://www.esri.com/en-us/legal/terms/full-master-agreement
 
-## License
+## Licensing
 
-The original ECHO prototype code is provided for personal experimentation. Third-party map tiles, libraries, imagery and data remain subject to their respective licenses, terms and attribution requirements.
+Third-party libraries, map tiles, imagery and event data remain subject to their respective licenses, terms and attribution requirements.

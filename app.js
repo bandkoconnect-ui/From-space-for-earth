@@ -10,15 +10,42 @@
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
   }
 
-  const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · &copy; <a href="https://carto.com/attributions">CARTO</a>';
   const map = L.map('map', { zoomControl: false, preferCanvas: true, scrollWheelZoom: true }).setView([27.72, 85.32], 8);
-  // CARTO Voyager is used for English-forward labels; proper local place names remain unchanged.
-  const streetTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19, subdomains: 'abcd', attribution: OSM_ATTR
-  }).addTo(map);
+  // Satellite imagery is the default basemap; the English street-map layer has been removed.
   const satelliteTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19, attribution: 'Imagery &copy; Esri and its imagery providers'
-  });
+  }).addTo(map);
+  map.createPane('nasaBeforePane'); map.getPane('nasaBeforePane').style.zIndex = 410;
+  map.createPane('nasaAfterPane'); map.getPane('nasaAfterPane').style.zIndex = 420;
+  map.getPane('nasaAfterPane').style.clipPath = 'inset(0 0 0 50%)';
+  const GIBS_BASE = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/';
+  const nasaBeforeTiles = L.tileLayer('', { pane:'nasaBeforePane', maxZoom:19, maxNativeZoom:9, opacity:1, attribution:'NASA Global Imagery Browse Services (GIBS) · MODIS Terra' });
+  const nasaAfterTiles = L.tileLayer('', { pane:'nasaAfterPane', maxZoom:19, maxNativeZoom:9, opacity:1, attribution:'NASA Global Imagery Browse Services (GIBS) · MODIS Terra' });
+  function setNasaDateLayers() {
+    const beforeDate = active.dates[0].date.split(' ').reverse().join('-').replace(/([A-Z]{3})/, m => ({JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'}[m] || m));
+    const selectedDate = active.dates[Number(document.getElementById('timeline')?.value || 2)].date;
+    const afterDate = selectedDate.split(' ').reverse().join('-').replace(/([A-Z]{3})/, m => ({JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'}[m] || m));
+    nasaBeforeTiles.setUrl(`${GIBS_BASE}${beforeDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`);
+    nasaAfterTiles.setUrl(`${GIBS_BASE}${afterDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`);
+    $('beforeLabel').textContent = `BEFORE · ${active.dates[0].date}`;
+    $('afterLabel').textContent = `AFTER · ${selectedDate}`;
+  }
+  function setCompare(value) {
+    const v = Math.max(0,Math.min(100,Number(value)));
+    map.getPane('nasaAfterPane').style.clipPath = `inset(0 0 0 ${v}%)`;
+    $('compareDivider').style.left = `${v}%`;
+  }
+  function setCompareVisibility(open) {
+    const el = $('mapCompare'); el.classList.toggle('open',open); el.setAttribute('aria-hidden',String(!open));
+    if (open) {
+      setNasaDateLayers();
+      if (!map.hasLayer(nasaBeforeTiles)) nasaBeforeTiles.addTo(map);
+      if (!map.hasLayer(nasaAfterTiles)) nasaAfterTiles.addTo(map);
+      setCompare($('compareSlider').value);
+    } else { map.removeLayer(nasaBeforeTiles); map.removeLayer(nasaAfterTiles); }
+    $('compareLayer').checked = open;
+    $('compareButton').innerHTML = open ? '× Close comparison' : '<span>◫</span> Compare before / after';
+  }
 
   const investigations = {
     nepal: {
@@ -64,6 +91,7 @@
       ], sourceText:'This is a demonstration investigation for exploring a forest-change workflow. No actual deforestation detection has been run, and all focus areas are illustrative.'
     }
   };
+  try { const saved=JSON.parse(localStorage.getItem('echo-custom-investigations')||'{}'); Object.assign(investigations,saved); } catch(_) {}
   let activeKey = 'nepal';
   let active = investigations[activeKey];
   let markerLayer = L.layerGroup().addTo(map);
@@ -86,8 +114,10 @@
     if (activeEventLayer) map.removeLayer(activeEventLayer);
     if (activeKey === 'nepal') {
       activeEventLayer = L.polygon([[27.86,84.98],[27.93,85.10],[27.87,85.22],[27.92,85.31],[27.81,85.40],[27.79,85.55],[27.68,85.49],[27.62,85.35],[27.66,85.24],[27.58,85.12],[27.68,85.03],[27.74,84.92],[27.86,84.98]],{color:'#86e4ff',weight:1.2,opacity:.8,fillColor:'#3cbde8',fillOpacity:.22,className:'flood-polygon'});
-    } else {
+    } else if (activeKey === 'amazon') {
       activeEventLayer = L.polygon([[-3.22,-62.78],[-3.0,-62.54],[-3.28,-62.23],[-3.18,-61.95],[-3.62,-61.8],[-3.9,-62.08],[-3.8,-62.45],[-3.52,-62.72],[-3.22,-62.78]],{color:'#a7e8ae',weight:1.2,opacity:.8,fillColor:'#6abf7b',fillOpacity:.2,className:'forest-polygon'});
+    } else {
+      activeEventLayer = L.circle(active.center,{radius:12000,color:'#9af3c6',weight:1.2,opacity:.8,fillColor:'#9af3c6',fillOpacity:.12,className:'custom-area'}).bindTooltip('User-defined area of interest · illustrative only');
     }
     if ($('floodLayer').checked) activeEventLayer.addTo(map);
     rainLayer.clearLayers();
@@ -96,25 +126,23 @@
     if ($('rainLayer').checked) rainLayer.addTo(map);
   }
   function renderInvestigation() {
-    document.querySelectorAll('.investigation-card').forEach(el=>el.classList.remove('selected'));
-    $(activeKey==='nepal'?'nepalCard':'amazonCard').classList.add('selected');
+    document.querySelectorAll('.investigation-card').forEach(el=>el.classList.toggle('selected',el.dataset.key===activeKey));
     document.querySelector('.breadcrumb strong').textContent=active.crumb;
     $('mapTitle').innerHTML=active.mapTitle;
     $('mapSubtitle').innerHTML=active.subtitle;
     document.querySelectorAll('.timeline-labels span').forEach((el,i)=>{el.textContent=active.dates[i].date.replace(' 2026','').replace(' 2025','');});
-    document.querySelector('.compare-map-before > span').textContent=`BEFORE · ${active.dates[0].date}`;
-    document.querySelector('.compare-map-after > span').textContent=`AFTER · ${active.dates[2].date}`;
+    setNasaDateLayers();
     $('legendTitle').textContent=active.legend;
     $('legendSubtitle').textContent=active.legendSub;
     document.querySelector('.inspector-head .eyebrow').textContent=`FIELD REPORT · ${active.id}`;
     document.querySelector('.report-date strong').textContent=active.dates[Number($('timeline').value)].date.replace(/(\d{2}) (\w{3}) (\d{4})/,'$1 $2 $3');
-    document.querySelector('.insight-callout strong').textContent=activeKey==='nepal'?'A river, out of bounds.':'A forest under observation.';
+    document.querySelector('.insight-callout strong').textContent=activeKey==='nepal'?'A river, out of bounds.':activeKey==='amazon'?'A forest under observation.':'A place to investigate.';
     document.querySelector('.insight-callout p').textContent=active.sourceText;
     document.querySelector('.insight-callout a').href=active.evidence[0][3];
-    document.querySelector('.metric-grid .metric strong').textContent=activeKey==='nepal'?'12–27':'JUN–SEP';
-    document.querySelector('.metric-grid .metric small').textContent=activeKey==='nepal'?'Before / after imagery':'Illustrative comparison windows';
-    document.querySelector('.metric-grid .metric:nth-child(2) strong').textContent=activeKey==='nepal'?'Sentinel-2':'Sentinel-2';
-    document.querySelector('.metric-grid .metric:nth-child(2) small').textContent=activeKey==='nepal'?'Optical · 10–20 m bands':'Optical · cloud cover matters';
+    document.querySelector('.metric-grid .metric strong').textContent=activeKey==='nepal'?'12–27':`${active.dates[0].date.slice(0,6)}–${active.dates[2].date.slice(0,6)}`;
+    document.querySelector('.metric-grid .metric small').textContent='Before / after date windows';
+    document.querySelector('.metric-grid .metric:nth-child(2) strong').textContent='MODIS Terra';
+    document.querySelector('.metric-grid .metric:nth-child(2) small').textContent='Daily composite · coarse resolution';
     const evidence = document.querySelector('.report-section .section-heading');
     const evidenceSection = [...document.querySelectorAll('.report-section')].find(el=>el.querySelector('.evidence-row'));
     evidenceSection.querySelectorAll('.evidence-row').forEach((row,i)=>{
@@ -127,10 +155,10 @@
     $('echo-context').innerHTML=`<span class="live-dot"></span> CONTEXT: ${active.crumb.toUpperCase()} · ${active.id}`;
     $('chatMessages').innerHTML=`<div class="assistant-message"><span class="message-icon">✳</span><div><strong>Let's investigate, not guess.</strong><p>${activeKey==='nepal'?'I can help explore flood evidence and plan a defensible analysis.':'I can help plan a forest-change investigation and separate potential signals from verified change.'} I’ll flag what this prototype cannot verify.</p></div></div>`;
     addMarkers(); drawEventLayer();
-    $('baseLayer').checked = true;
-    if (!map.hasLayer(streetTiles) && !$('satelliteLayer').checked) streetTiles.addTo(map);
+    if ($('satelliteLayer').checked && !map.hasLayer(satelliteTiles)) satelliteTiles.addTo(map);
     map.flyTo(active.center,active.zoom,{duration:.7});
     setDate($('timeline').value,false);
+    renderDashboard();
   }
 
   const dates = active.dates;
@@ -141,12 +169,13 @@
     $('dateChip').textContent=d.date;
     $('timelineDescription').textContent=d.desc;
     progress.style.width=`${(i/3)*100}%`;
-    if (moveMap) map.flyTo(d.center,d.zoom,{duration:.45});
+    // Timeline changes imagery only. The user's map center and zoom stay exactly where they are.
     if(activeEventLayer) activeEventLayer.setStyle({fillOpacity:i===0?.08:i===1?.14:i===2?.22:.16,opacity:i===0?.35:.8});
     document.querySelector('.report-date strong').textContent=d.date.replace(/(\d{2}) (\w{3}) (\d{4})/,'$1 $2 $3');
     $('playTimeline').textContent=playTimer?'Ⅱ':'▶';
+    setNasaDateLayers();
   }
-  timeline.addEventListener('input',()=>setDate(timeline.value,true));
+  timeline.addEventListener('input',()=>setDate(timeline.value,false));
   $('playTimeline').addEventListener('click',()=>{
     if(playTimer){clearInterval(playTimer);playTimer=null;$('playTimeline').textContent='▶';return;}
     if(Number(timeline.value)>=3) timeline.value='0';
@@ -154,7 +183,7 @@
     playTimer=setInterval(()=>{
       const next=Number(timeline.value)+1;
       if(next>3){clearInterval(playTimer);playTimer=null;$('playTimeline').textContent='▶';return;}
-      timeline.value=String(next);setDate(next,true);
+      timeline.value=String(next);setDate(next,false);
     },1500);
   });
   function stopTimeline(){if(playTimer){clearInterval(playTimer);playTimer=null;$('playTimeline').textContent='▶';}}
@@ -166,31 +195,26 @@
   map.on('mousemove',e=>$('coordinates').textContent=`${Math.abs(e.latlng.lat).toFixed(4)}° ${e.latlng.lat>=0?'N':'S'}, ${Math.abs(e.latlng.lng).toFixed(4)}° ${e.latlng.lng>=0?'E':'W'}`);
   map.on('mouseout',()=>$('coordinates').textContent=`${active.center[0].toFixed(4)}° ${active.center[0]>=0?'N':'S'}, ${Math.abs(active.center[1]).toFixed(4)}° ${active.center[1]>=0?'E':'W'}`);
 
-  $('baseLayer').addEventListener('change',e=>{
-    if(e.target.checked){if(!$('satelliteLayer').checked)streetTiles.addTo(map);}else map.removeLayer(streetTiles);
-    toast(e.target.checked?'English street map enabled':'English street map hidden');
-  });
   $('satelliteLayer').addEventListener('change',e=>{
-    if(e.target.checked){map.removeLayer(streetTiles);satelliteTiles.addTo(map);}else{map.removeLayer(satelliteTiles);if($('baseLayer').checked)streetTiles.addTo(map);}
-    toast(e.target.checked?'Satellite imagery enabled':'Satellite imagery hidden');
+    if(e.target.checked){satelliteTiles.addTo(map);}else{map.removeLayer(satelliteTiles);}
+    toast(e.target.checked?'Satellite basemap enabled':'Satellite basemap hidden');
   });
+  $('compareLayer').addEventListener('change',e=>{setCompareVisibility(e.target.checked);if(e.target.checked)toast('Real NASA MODIS imagery loaded where available');});
   $('floodLayer').addEventListener('change',e=>{if(!activeEventLayer)drawEventLayer();else if(e.target.checked)activeEventLayer.addTo(map);else map.removeLayer(activeEventLayer);toast(e.target.checked?'Illustrative event overlay enabled':'Event overlay hidden');});
   $('placesLayer').addEventListener('change',e=>{if(e.target.checked)markerLayer.addTo(map);else map.removeLayer(markerLayer);toast(e.target.checked?'Investigation points shown':'Investigation points hidden');});
-  $('rainLayer').addEventListener('change',e=>{if(e.target.checked)rainLayer.addTo(map);else map.removeLayer(rainLayer);toast(e.target.checked?'Illustrative rainfall context shown':'Rainfall context hidden');});
+  $('rainLayer').addEventListener('change',e=>{if(e.target.checked)rainLayer.addTo(map);else map.removeLayer(rainLayer);toast(e.target.checked?'Illustrative rainfall context shown':'Illustrative rainfall context hidden');});
   $('resetLayers').addEventListener('click',()=>{
-    $('baseLayer').checked=true;$('satelliteLayer').checked=false;$('floodLayer').checked=true;$('placesLayer').checked=true;$('rainLayer').checked=false;
-    map.removeLayer(satelliteTiles);streetTiles.addTo(map);markerLayer.addTo(map);if(activeEventLayer)activeEventLayer.addTo(map);map.removeLayer(rainLayer);toast('Map layers reset');
+    $('satelliteLayer').checked=true;satelliteTiles.addTo(map);
+    $('compareLayer').checked=false;setCompareVisibility(false);
+    $('floodLayer').checked=false;if(activeEventLayer)map.removeLayer(activeEventLayer);
+    $('placesLayer').checked=true;markerLayer.addTo(map);$('rainLayer').checked=false;map.removeLayer(rainLayer);
+    toast('Layers reset to satellite basemap and investigation points');
   });
 
-  // In-map draggable before/after reveal. The imagery-style artwork is explicitly illustrative, not satellite data.
+  // Dated NASA GIBS imagery lives in map panes; swipe clipping never changes map zoom or position.
   const compareSlider=$('compareSlider');
-  function setCompare(value){const v=Number(value);$('compareAfter').style.clipPath=`inset(0 0 0 ${v}%)`;$('compareDivider').style.left=`${v}%`;}
   compareSlider.addEventListener('input',()=>setCompare(compareSlider.value));
-  $('compareButton').addEventListener('click',()=>{
-    const el=$('mapCompare');const open=!el.classList.contains('open');el.classList.toggle('open',open);el.setAttribute('aria-hidden',String(!open));$('compareButton').innerHTML=open?'× Close comparison':'<span>◫</span> Compare before / after';
-    if(open){compareSlider.value=50;setCompare(50);toast('Drag the comparison slider to reveal each side');}
-  });
-  $('mapCompare').addEventListener('pointerdown',e=>{if(e.target===compareSlider)return;});
+  $('compareButton').addEventListener('click',()=>setCompareVisibility(!$('mapCompare').classList.contains('open')));
 
   function openModal(el){el.classList.add('open');el.setAttribute('aria-hidden','false');}
   function closeModal(el){el.classList.remove('open');el.setAttribute('aria-hidden','true');}
@@ -198,10 +222,23 @@
   $('dataButton').addEventListener('click',()=>openModal(infoModal));
   $('closeInfo').addEventListener('click',()=>closeModal(infoModal));
   infoModal.addEventListener('click',e=>{if(e.target===infoModal)closeModal(infoModal);});
-  $('savedButton').addEventListener('click',()=>toast('Choose an investigation from the left panel. Saved collections are a future feature.'));
-  $('nepalCard').addEventListener('click',()=>{stopTimeline();activeKey='nepal';active=investigations.nepal;timeline.value='2';timeline.max='3';renderInvestigation();toast('Nepal flood investigation opened');});
-  $('amazonCard').addEventListener('click',()=>{stopTimeline();activeKey='amazon';active=investigations.amazon;timeline.value='0';timeline.max='3';renderInvestigation();toast('Amazon forest-change case study opened');});
-  $('newInvestigation').addEventListener('click',()=>toast('New investigation creation is not connected yet. The Amazon case study shows how a second investigation can look.'));
+  const dashboardView=$('dashboardView');
+  function showDashboard(){stopTimeline();document.querySelector('.breadcrumb strong').textContent='My investigations';document.querySelector('.workspace').classList.add('dashboard-mode');dashboardView.classList.add('active');dashboardView.setAttribute('aria-hidden','false');document.querySelectorAll('.rail-button').forEach(b=>b.classList.remove('active'));$('savedButton').classList.add('active');renderDashboard();loadPlanetPulse();setTimeout(()=>map.invalidateSize(),80);}
+  function showMap(){document.querySelector('.breadcrumb strong').textContent=active.crumb;document.querySelector('.workspace').classList.remove('dashboard-mode');dashboardView.classList.remove('active');dashboardView.setAttribute('aria-hidden','true');document.querySelectorAll('.rail-button').forEach(b=>b.classList.remove('active'));$('exploreButton').classList.add('active');setTimeout(()=>map.invalidateSize(),80);}
+  function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+  function renderDashboard(){
+    const entries=Object.entries(investigations);$('dashboardCount').textContent=String(entries.length).padStart(2,'0');
+    $('dashboardInvestigations').innerHTML=entries.map(([key,item],i)=>`<button class="dashboard-investigation" data-key="${escapeHtml(key)}"><span class="dashboard-card-art ${key==='nepal'?'nepal-art':key==='amazon'?'amazon-art':'custom-art'}"><span>FIELD NOTE ${String(i+1).padStart(3,'0')}</span><i>↗</i></span><span class="dashboard-card-copy"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.subtitle.replace(/<[^>]+>/g,''))}</small><em>${escapeHtml(item.isCustom?'Personal workspace':key==='nepal'?'Historical event':'Case study')}</em></span></button>`).join('');
+  }
+  function selectInvestigation(key){if(!investigations[key])return;stopTimeline();activeKey=key;active=investigations[key];timeline.value=key==='nepal'?'2':(investigations[key].isCustom?'3':'2');timeline.max='3';showMap();renderInvestigation();toast(`${active.title} opened`);}
+  $('exploreButton').addEventListener('click',showMap);
+  $('savedButton').addEventListener('click',showDashboard);
+  document.querySelector('.brand-mark').addEventListener('click',e=>{e.preventDefault();showDashboard();});
+  document.querySelector('.sidebar').addEventListener('click',e=>{const card=e.target.closest('.investigation-card');if(card&&card.dataset.key)selectInvestigation(card.dataset.key);});
+  $('dashboardInvestigations').addEventListener('click',e=>{const card=e.target.closest('.dashboard-investigation');if(card)selectInvestigation(card.dataset.key);});
+  $('dashboardViewAll').addEventListener('click',showMap);
+  $('newInvestigation').addEventListener('click',()=>openModal(newInvestigationModal));
+  $('dashboardNewInvestigation').addEventListener('click',()=>openModal(newInvestigationModal));
 
   const inspector=$('inspector');
   function showInspector(){inspector.classList.add('open');}
@@ -211,8 +248,25 @@
   function closeEcho(){echoPanel.classList.remove('open');echoPanel.setAttribute('aria-hidden','true');}
   $('askEchoTop').addEventListener('click',openEcho);$('askEchoReport').addEventListener('click',openEcho);$('closeEcho').addEventListener('click',closeEcho);
 
+  const newInvestigationModal=$('newInvestigationModal');
+  $('closeNewInvestigation').addEventListener('click',()=>closeModal(newInvestigationModal));
+  newInvestigationModal.addEventListener('click',e=>{if(e.target===newInvestigationModal)closeModal(newInvestigationModal);});
+  $('newInvestigationForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const title=$('newTitle').value.trim(),lat=Number($('newLat').value),lng=Number($('newLng').value),topic=$('newTopic').value;
+    if(!title||!Number.isFinite(lat)||!Number.isFinite(lng)||lat < -85||lat > 85||lng < -180||lng > 180){toast('Please enter a name and valid coordinates');return;}
+    const key='custom_'+Date.now().toString(36);const now=new Date();const dates=[0,1,2,3].map((offset)=>{const d=new Date(now);d.setUTCDate(d.getUTCDate()-offset*16);const month=d.toLocaleString('en-US',{month:'short',timeZone:'UTC'}).toUpperCase();return {date:`${String(d.getUTCDate()).padStart(2,'0')} ${month} ${d.getUTCFullYear()}`,desc:offset===0?'Current observation window · inspect available imagery':`Historical comparison window · ${offset*16} days earlier`,center:[lat,lng],zoom:7};}).reverse();
+    const topicLabel=({environment:'Environmental change',flood:'Water and flood watch',forest:'Forest change',fire:'Wildfire monitoring',urban:'Urban growth',other:'Earth observation'})[topic]||'Earth observation';
+    const item={id:String(Object.keys(investigations).length+1).padStart(3,'0'),title,crumb:title,mapTitle:'A new question.<br/>A changing planet.',subtitle:`${lat.toFixed(3)}°, ${lng.toFixed(3)}° <span>·</span> ${topicLabel}`,legend:'Area to investigate',legendSub:'No automated change detection has been run',center:[lat,lng],zoom:7,isCustom:true,topic,points:[{name:'Selected location',point:[lat,lng],type:'User-defined area of interest'},{name:'Northwest context',point:[Math.min(84,lat+.12),lng-.15],type:'Nearby context · inspect imagery'},{name:'Southeast context',point:[Math.max(-84,lat-.12),lng+.15],type:'Nearby context · inspect imagery'}],dates,evidence:[['NASA','NASA GIBS imagery','Daily MODIS true-colour composite','https://nasa-gibs.github.io/gibs-api-docs/'],['EU','Copernicus Data Space','Sentinel archive for higher-resolution follow-up','https://dataspace.copernicus.eu/'],['EONET','NASA EONET','Active Earth events','https://eonet.gsfc.nasa.gov/']],pointsHtml:[['Inspect available imagery','Check dates, cloud cover and native resolution.'],['Compare change signals','Treat visible differences as hypotheses, not verified change.'],['Validate with source data','Use higher-resolution sources and independent reference data.']],sourceText:'This is a new user-created investigation workspace. NASA MODIS imagery can provide broad context, but no event detection or change measurement has been run.'};
+    investigations[key]=item;try{localStorage.setItem('echo-custom-investigations',JSON.stringify(Object.fromEntries(Object.entries(investigations).filter(([k,v])=>v.isCustom))));}catch(_){}
+    const card=document.createElement('button');card.className='investigation-card';card.dataset.key=key;card.innerHTML=`<div class="thumb custom-thumb"><span class="thumb-tag">FIELD NOTE ${item.id}</span><span class="thumb-contour"></span></div><div class="investigation-copy"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(topicLabel)} <i class="status-dot"></i> Personal workspace</span></div><svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>`;$('newInvestigation').before(card);
+    closeModal(newInvestigationModal);$('newInvestigationForm').reset();$('newLat').value=lat;$('newLng').value=lng;renderDashboard();selectInvestigation(key);toast('Investigation created in this browser');
+  });
+  let planetPulseLoaded=false;
+  async function loadPlanetPulse(){if(planetPulseLoaded)return;planetPulseLoaded=true;const holder=$('planetNews');try{const res=await fetch('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=6',{headers:{Accept:'application/json'}});if(!res.ok)throw new Error('NASA EONET unavailable');const data=await res.json();const events=(data.events||[]).slice(0,6);if(!events.length)throw new Error('No active events returned');holder.innerHTML=events.map(ev=>{const geom=(ev.geometry||[]).slice(-1)[0];const date=geom?.date?new Date(geom.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}):'Date not provided';const category=(ev.categories||[]).map(c=>c.title).join(' · ')||'Earth event';const source=(ev.sources||[])[0]?.url||'https://eonet.gsfc.nasa.gov/';return `<a class="planet-news-card" href="${escapeHtml(source)}" target="_blank" rel="noreferrer"><span class="news-type">${escapeHtml(category)}</span><strong>${escapeHtml(ev.title||'Untitled event')}</strong><small>Updated ${escapeHtml(date)}</small><i>Open source ↗</i></a>`;}).join('');}catch(err){holder.innerHTML='<div class="news-fallback"><strong>Planet Pulse is temporarily unavailable.</strong><p>Open NASA EONET to explore active wildfires, storms, volcanoes and other Earth events.</p><a href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noreferrer">Explore live events ↗</a></div>';}}
+
   $('shareButton').addEventListener('click',()=>{
-    const snapshot={app:'ECHO — Earth Intelligence for Everyone',investigation:active.title,selectedDate:active.dates[Number(timeline.value)].date,selectedLayers:{englishStreetMap:$('baseLayer').checked,satelliteImagery:$('satelliteLayer').checked,eventOverlay:$('floodLayer').checked,investigationPoints:$('placesLayer').checked,rainfallContext:$('rainLayer').checked},status:'Prototype. Event geometry and rainfall context are illustrative; no satellite analysis is performed.',evidence:active.evidence.map(x=>x[3]),exportedAt:new Date().toISOString()};
+    const snapshot={app:'ECHO — Earth Intelligence for Everyone',investigation:active.title,selectedDate:active.dates[Number(timeline.value)].date,selectedLayers:{satelliteBasemap:$('satelliteLayer').checked,nasaDateComparison:$('compareLayer').checked,eventOverlay:$('floodLayer').checked,investigationPoints:$('placesLayer').checked,rainfallContext:$('rainLayer').checked},status:'The swipe uses real NASA MODIS true-colour daily composite imagery at coarse resolution. Illustrative event geometry and rainfall context are not measured results; no automated satellite analysis is performed.',evidence:active.evidence.map(x=>x[3]),exportedAt:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`echo-${activeKey}-investigation.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);toast('Investigation snapshot exported');
   });
 
@@ -231,11 +285,12 @@
   function submitQuestion(question){const q=question.trim();if(!q)return;addUserMessage(q);$('suggestions').style.display='none';$('chatInput').value='';setTimeout(()=>addAssistantMessage(answerFor(q)),160);}
   $('chatForm').addEventListener('submit',e=>{e.preventDefault();submitQuestion($('chatInput').value);});
   $('suggestions').querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>submitQuestion(btn.textContent)));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal(infoModal);closeEcho();inspector.classList.remove('open');$('mapCompare').classList.remove('open');$('mapCompare').setAttribute('aria-hidden','true');}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal(infoModal);closeEcho();inspector.classList.remove('open');setCompareVisibility(false);closeModal(newInvestigationModal);}});
 
   // Keep the report panel reachable on narrower screens.
   if(window.matchMedia('(max-width: 1250px)').matches){const crumb=document.querySelector('.breadcrumb');crumb.style.cursor='pointer';crumb.title='Open field report';crumb.addEventListener('click',showInspector);}
   $('echo-context').innerHTML=`<span class="live-dot"></span> CONTEXT: ${active.crumb.toUpperCase()} · ${active.id}`;
-  addMarkers();drawEventLayer();setDate(2,false);setCompare(50);
+  Object.entries(investigations).filter(([key,item])=>item.isCustom).forEach(([key,item])=>{const card=document.createElement('button');card.className='investigation-card';card.dataset.key=key;card.innerHTML=`<div class="thumb custom-thumb"><span class="thumb-tag">FIELD NOTE ${escapeHtml(item.id)}</span><span class="thumb-contour"></span></div><div class="investigation-copy"><strong>${escapeHtml(item.title)}</strong><span>Personal workspace <i class="status-dot"></i> Custom</span></div><svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>`;$('newInvestigation').before(card);});
+  addMarkers();drawEventLayer();setDate(2,false);setCompare(50);renderDashboard();loadPlanetPulse();
   window.addEventListener('resize',()=>map.invalidateSize());
 })();
