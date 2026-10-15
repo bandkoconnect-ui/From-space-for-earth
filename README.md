@@ -50,3 +50,29 @@ Third-party libraries, map tiles, imagery and event data remain subject to their
 - NASA GIBS imagery is served online and may be unavailable for a specific date, tile or region; clouds and missing observations can occur. The comparison uses MODIS Terra imagery, which is coarse compared with Sentinel-2 or commercial Planet imagery.
 - Planet Labs is listed as a potential source, but this static GitHub Pages app is not connected to a Planet API or account.
 - The flood and forest polygons remain illustrative. No verified flood delineation, deforestation detection, or live AI analysis is performed.
+
+## ECHO v5 — visual polish, community preview and chat upgrade
+
+- **Editorial investigation imagery:** investigation cards and the sidebar use real Unsplash-hosted photography with dark overlays for readable labels. Images are remotely hosted and need an internet connection.
+- **Community preview:** added a featured field note, discussion threads, a campfire-style chat panel, and a small interactive local reply demo. This is a visual/product prototype only: messages are not public, persisted, moderated, or synced to a community server.
+- **Ask ECHO is now conversation-aware:** the front-end preserves recent turns, uses the active investigation/date context, responds to more question types, shows a thinking state, and provides varied fallback guidance instead of returning the same canned answer every time.
+- **Optional live AI chat:** a secure Netlify Function (`netlify/functions/echo-chat.js`) proxies chat requests to the OpenAI Responses API. The API key stays server-side and is never embedded in browser JavaScript.
+
+### Enable live AI chat
+
+GitHub Pages is static hosting and cannot run the included serverless function. On GitHub Pages, Ask ECHO falls back to contextual research guidance. To enable genuine model-generated responses:
+
+1. Deploy this folder as a site on Netlify (the included `netlify.toml` configures the site root and function folder).
+2. In Netlify site settings, add an environment variable named `OPENAI_API_KEY` with your own API key. Optionally set `OPENAI_MODEL` to a model available to your account; the default is `gpt-4.1-mini`.
+3. Redeploy the site. Test Ask ECHO and check that its footer says **Live AI connected** after the first successful response.
+4. Never place an API key in `app.js`, HTML, GitHub commits, or local browser storage. The AI provider may charge usage fees; review account limits and privacy terms.
+
+The chat uses the current investigation title, topic, selected date, caveats and evidence links as context. It does not independently fetch or analyze satellite pixels; answers should be checked against source data.
+
+### Community preview limitations
+
+Community content is sample content designed to demonstrate the experience. The chat sends a simulated in-browser response and is not a real public room. A production community would need user accounts, a database/realtime service, moderation/reporting, privacy controls and abuse prevention.
+
+### Images
+
+Photography is hotlinked from `images.unsplash.com`; image availability depends on Unsplash's image hosting and internet connectivity. The images are illustrative editorial photography, not evidence or satellite observations. For an app using the official Unsplash API, follow its API hotlinking and attribution requirements.
