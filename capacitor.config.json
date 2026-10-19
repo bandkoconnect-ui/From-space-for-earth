@@ -1,0 +1,29 @@
+{
+  "appId": "com.bandkoconnect.echo",
+  "appName": "ECHO",
+  "webDir": "dist/mobile",
+  "backgroundColor": "#0b1118",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0b1118"
+  },
+  "android": {
+    "backgroundColor": "#0b1118",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "launchShowDuration": 0,
+      "backgroundColor": "#0b1118",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0b1118"
+    }
+  }
+}

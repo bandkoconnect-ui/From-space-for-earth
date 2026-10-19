@@ -1,0 +1,43 @@
+# Dependencies and build output
+node_modules/
+dist/
+release/
+
+# Capacitor: commit android/ and ios/ (they hold your signing setup and native tweaks),
+# but not what Gradle, Xcode, CocoaPods and `cap sync` regenerate.
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/capacitor-cordova-android-plugins/
+android/local.properties
+android/*.keystore
+android/*.jks
+ios/App/Pods/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/build/
+ios/DerivedData/
+ios/App/xcuserdata/
+
+# Signing material and secrets must never be committed
+*.keystore
+*.jks
+*.p12
+*.p8
+*.mobileprovision
+.env
+.env.*
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+
+# Browser-test screenshots and caches
+tools/e2e/out/
+__pycache__/

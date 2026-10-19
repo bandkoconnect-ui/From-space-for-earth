@@ -1,0 +1,90 @@
+{
+  "name": "echo-earth-intelligence",
+  "productName": "ECHO",
+  "version": "1.0.0",
+  "description": "ECHO — Earth intelligence for everyone. Desktop and phone apps for investigating a changing planet with NASA imagery.",
+  "private": true,
+  "type": "module",
+  "author": "bandkoconnect <bandkoconnect@gmail.com>",
+  "license": "UNLICENSED",
+  "main": "apps/desktop/main.cjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test \"packages/**/test/*.test.js\" \"apps/**/test/*.test.js\" \"netlify/**/test/*.test.js\"",
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "dev:desktop": "node scripts/build.mjs desktop && node scripts/serve.mjs desktop",
+    "dev:mobile": "node scripts/build.mjs mobile && node scripts/serve.mjs mobile",
+    "desktop": "node scripts/build.mjs desktop && electron .",
+    "desktop:dist": "node scripts/build.mjs desktop && electron-builder",
+    "mobile:setup": "node scripts/build.mjs mobile && cap add android && cap add ios && npm run mobile:assets && cap sync",
+    "mobile:assets": "capacitor-assets generate --assetPath resources",
+    "mobile:sync": "node scripts/build.mjs mobile && cap sync",
+    "mobile:android": "npm run mobile:sync && cap open android",
+    "mobile:ios": "npm run mobile:sync && cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "latest",
+    "@capacitor/app": "latest",
+    "@capacitor/browser": "latest",
+    "@capacitor/core": "latest",
+    "@capacitor/filesystem": "latest",
+    "@capacitor/geolocation": "latest",
+    "@capacitor/haptics": "latest",
+    "@capacitor/ios": "latest",
+    "@capacitor/network": "latest",
+    "@capacitor/preferences": "latest",
+    "@capacitor/share": "latest",
+    "@capacitor/splash-screen": "latest",
+    "@capacitor/status-bar": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "latest",
+    "@capacitor/cli": "latest",
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "com.bandkoconnect.echo",
+    "productName": "ECHO",
+    "copyright": "Copyright © 2026 bandkoconnect",
+    "directories": {
+      "output": "release",
+      "buildResources": "apps/desktop/build"
+    },
+    "files": [
+      "apps/desktop/main.cjs",
+      "apps/desktop/preload.cjs",
+      "apps/desktop/lib/**",
+      "dist/desktop/**",
+      "package.json"
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "hardenedRuntime": true
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Education"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://server.arcgisonline.com https://gibs.earthdata.nasa.gov; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>ECHO · Earth Intelligence</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="shared/ui/base.css" />
+  <link rel="stylesheet" href="styles/desktop.css" />
+</head>
+<body>
+  <div id="app"></div>
+  <noscript>ECHO needs JavaScript to run.</noscript>
+  <script type="module" src="vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="app/main.js"></script>
+</body>
+</html>
