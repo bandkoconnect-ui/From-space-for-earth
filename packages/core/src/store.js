@@ -15,6 +15,7 @@ import { isValidLatLng } from './geo.js';
 export const SCHEMA_VERSION = 1;
 export const MAX_NOTES_PER_INVESTIGATION = 500;
 export const MAX_INVESTIGATIONS = 200;
+export const MAX_CACHED_EVENTS = 200;
 
 export const DEFAULT_SETTINGS = Object.freeze({
   chatEndpoint: '',
@@ -123,7 +124,7 @@ export function createStore(adapter, { now = () => new Date(), saveDelayMs = 200
       if (list.length) notes.set(entry[0], list);
     }
     const items = Array.isArray(parsed.events?.items) ? parsed.events.items : [];
-    events = { fetchedAt: toIsoDate(parsed.events?.fetchedAt) ? parsed.events.fetchedAt : null, items: items.slice(0, 100) };
+    events = { fetchedAt: toIsoDate(parsed.events?.fetchedAt) ? parsed.events.fetchedAt : null, items: items.slice(0, MAX_CACHED_EVENTS) };
     if (!seeded) {
       investigations.push(...demoInvestigations().filter((demo) => !investigations.some((i) => i.id === demo.id)));
       seeded = true;
@@ -247,7 +248,7 @@ export function createStore(adapter, { now = () => new Date(), saveDelayMs = 200
 
     /* ---- event feed cache (so Planet Pulse still shows something offline) ---- */
     cacheEvents(items, fetchedAt = now().toISOString()) {
-      events = { fetchedAt, items: items.slice(0, 100) };
+      events = { fetchedAt, items: items.slice(0, MAX_CACHED_EVENTS) };
       schedulePersist();
     },
     cachedEvents() { return { fetchedAt: events.fetchedAt, items: events.items.slice() }; },

@@ -2,6 +2,7 @@
 """Runs every browser test against the built apps and prints a summary.
 
     python3 tools/e2e/run.py              all suites
+    python3 tools/e2e/run.py web          only the web app (GitHub Pages)
     python3 tools/e2e/run.py phone        only the phone app
     python3 tools/e2e/run.py desktop      only the desktop UI
     python3 tools/e2e/run.py phone_native one suite by name
@@ -14,7 +15,7 @@ import pathlib, subprocess, sys, time
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 OUT = HERE / "out"
-SUITES = ["desktop_explore", "desktop_pages", "desktop_offline", "phone_explore", "phone_pages", "phone_native", "phone_sizes"]
+SUITES = ["web_desktop", "web_mobile", "desktop_explore", "desktop_pages", "desktop_offline", "phone_explore", "phone_pages", "phone_native", "phone_sizes"]
 
 def main(argv):
     wanted = argv[1:] or ["all"]

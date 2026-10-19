@@ -2,18 +2,20 @@
 
 Look into what is happening to a place on Earth, using real NASA satellite imagery and open event data, and stay honest about what the evidence does and does not show.
 
-This repository holds two apps built on one shared core, each with its own interface:
+This repository holds three ways to use ECHO, built on one shared core:
 
-| | Desktop app | Phone app |
-| --- | --- | --- |
-| For | Windows, macOS, Linux | Android (Google Play) and iOS (App Store) |
-| Runs on | Electron | Capacitor |
-| Interface | Three-pane workspace: investigations and layers, map and timeline, report / notes / Ask ECHO. Menus, keyboard shortcuts, window memory | Map-first screen with a draggable bottom sheet, bottom tab bar (Explore, Pulse, Saved, Ask), large touch targets, safe-area and keyboard aware |
-| Code | `apps/desktop` | `apps/mobile` |
+| | Web | Desktop app | Phone app |
+| --- | --- | --- | --- |
+| For | Any browser, published on GitHub Pages | Windows, macOS, Linux | Android (Google Play) and iOS (App Store) |
+| Runs on | Plain web files, no build step | Electron | Capacitor |
+| Interface | The map is the whole screen: red pins for live NASA events, a floating search and discovery panel, and a Field Report that opens beside the map (bottom sheets on phones) | Three-pane workspace with menus, keyboard shortcuts and window memory | Map-first screen with a draggable bottom sheet and a bottom tab bar |
+| Code | `index.html` and `apps/web` | `apps/desktop` | `apps/mobile` |
 
-Shared by both: `packages/core` (investigations, storage, dates, imagery catalogue, event feed, chat, reports; plain JavaScript with unit tests), `packages/map` (the Leaflet map with before/after compare), `packages/ui` (DOM helpers, artwork, common styles).
+**The web app is what GitHub Pages serves** at https://bandkoconnect-ui.github.io/From-space-for-earth/. How to deploy it, which services it uses (none need a key), and its limits are in [docs/WEB_APP.md](docs/WEB_APP.md).
 
-The original single-page web prototype is still in the repository root (`index.html`, `app.js`, `styles.css`) and keeps working on GitHub Pages and Netlify. Its notes are in [docs/PROTOTYPE_NOTES.md](docs/PROTOTYPE_NOTES.md).
+Shared by all three: `packages/core` (investigations, storage, dates, imagery catalogue, event feed, chat, reports; plain JavaScript with unit tests), `packages/map` (the Leaflet map with before/after compare), `packages/ui` (DOM helpers, artwork, common styles).
+
+The original single-page prototype is kept unchanged at `legacy/` (served at `/legacy/`). Its notes are in [docs/PROTOTYPE_NOTES.md](docs/PROTOTYPE_NOTES.md).
 
 ## What the apps do
 
@@ -33,6 +35,7 @@ You need Node.js 20 or newer.
 ```
 npm install
 npm test                 # unit tests (no browser needed)
+npm run serve:web        # the web app at http://localhost:5175/ (the same files GitHub Pages serves)
 npm run dev:desktop      # try the desktop UI in a browser at http://localhost:5173
 npm run dev:mobile       # try the phone UI in a browser at http://localhost:5174 (use the device toolbar of your browser's dev tools)
 ```
@@ -56,14 +59,16 @@ The apps never contain an AI key. To get live answers, deploy `netlify/functions
 
 ## Testing and what has been verified
 
-- `npm test`: 108 unit tests across the shared core, the desktop's main-process modules and the phone's native bridge, plus the chat function.
-- `python3 tools/e2e/run.py`: 347 browser checks in headless Chromium against the built desktop and phone interfaces, with the network faked. See [tools/e2e/README.md](tools/e2e/README.md).
+- `npm test`: 138 unit tests across the shared core, the web app's logic (clustering, search parsing, the Field Report model, day/night, links), the desktop's main-process modules and the phone's native bridge, plus the chat function.
+- `python3 tools/e2e/run.py`: 521 browser checks in headless Chromium against the web app (desktop, phone and five other screen sizes, served under the same sub-path GitHub Pages uses) and the built desktop and phone interfaces, with every outside service faked. See [tools/e2e/README.md](tools/e2e/README.md).
 
-These cannot reach the parts that need real devices or real servers: the Electron shell itself (menus, native dialogs, installers), the Capacitor plugins on a real phone, iOS and Android builds, and the live NASA and Esri services. Test those on your own machines using the checklists in `docs/RELEASING.md` and `store/submission-checklist.md` before you publish.
+These cannot reach the parts that need real devices or real servers: the live NASA, Esri and place-search services, the Electron shell itself (menus, native dialogs, installers), the Capacitor plugins on a real phone, iOS and Android builds, and the live NASA and Esri services. Test those on your own machines using the checklists in `docs/RELEASING.md` and `store/submission-checklist.md` before you publish.
 
 ## Project layout
 
 ```
+index.html           The web app's page (what GitHub Pages serves)
+apps/web/            The web app: map, search, sidebar, Field Report, phone sheets
 apps/desktop/        Electron main process (main.cjs, preload.cjs, lib/) and the desktop interface (renderer/)
 apps/mobile/www/     The phone interface (plain web files that Capacitor wraps)
 packages/core/       Shared logic, with tests
@@ -75,8 +80,8 @@ resources/           App icon and splash artwork (icon.svg plus the PNGs generat
 netlify/functions/   The optional AI proxy
 store/               App Store and Google Play text, privacy policy, checklists
 tools/e2e/           Browser tests
-docs/                ARCHITECTURE.md, RELEASING.md, PROTOTYPE_NOTES.md
-index.html, app.js, styles.css   The original web prototype
+docs/                WEB_APP.md, ARCHITECTURE.md, RELEASING.md, PROTOTYPE_NOTES.md
+legacy/              The original web prototype, unchanged
 ```
 
 ## Data and licences

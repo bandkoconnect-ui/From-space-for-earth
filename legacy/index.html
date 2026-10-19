@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1118" />
+  <meta name="description" content="ECHO — Earth intelligence for everyone. Explore satellite evidence, rewind events, and understand a changing planet." />
+  <title>ECHO — Earth Intelligence</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="preconnect" href="https://tile.openstreetmap.org" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail">
+      <a class="brand-mark" href="#" title="Dashboard" aria-label="Open dashboard"><span class="brand-orbit"></span><span class="brand-core"></span></a>
+      <button class="rail-button active" title="Explore" aria-label="Explore" id="exploreButton"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5M10.8 7.2v7.2M7.2 10.8h7.2"/></svg></button>
+      <button class="rail-button" title="My investigations" aria-label="My investigations" id="savedButton"><svg viewBox="0 0 24 24"><path d="M6 4.5h12v16l-6-3.8-6 3.8z"/></svg></button>
+      <button class="rail-button" title="Community" aria-label="Community" id="communityButton"><svg viewBox="0 0 24 24"><path d="M8.2 11.4a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="M15.8 10.3a2.6 2.6 0 1 0 0-5.2M2.8 18.8v-1.2a4.2 4.2 0 0 1 4.2-4.2h2.4a4.2 4.2 0 0 1 4.2 4.2v1.2zM15.4 13.7h1.4a4.2 4.2 0 0 1 4.2 4.2v.9h-5.1"/></svg></button>
+      <div class="rail-spacer"></div>
+      <button class="rail-button" title="About data" aria-label="About data" id="dataButton"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg></button>
+      <div class="avatar">B</div>
+    </aside>
+
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="eyebrow">EARTH INTELLIGENCE FOR EVERYONE</div>
+        <h1>See the<br/><span>whole story.</span></h1>
+        <p class="intro">A living record of our changing planet.</p>
+      </div>
+
+      <div class="section-label">INVESTIGATIONS</div>
+      <button class="investigation-card selected" id="nepalCard" data-key="nepal">
+        <div class="thumb nepal-thumb"><img src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=500&q=80" alt="Himalayan river valley" loading="eager" onerror="this.onerror=null;this.src='nepal-fallback.png'"><span class="thumb-shade"></span><span class="thumb-tag">FIELD NOTE 001</span><span class="thumb-contour"></span></div>
+        <div class="investigation-copy"><strong>Nepal · Flash flood</strong><span>August 2026 <i class="status-dot"></i> Historical event</span></div>
+        <svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+      <button class="investigation-card" id="amazonCard" data-key="amazon">
+        <div class="thumb amazon-thumb"><img src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=500&q=80" alt="Dense Amazon rainforest canopy" loading="eager" onerror="this.onerror=null;this.src='forest-fallback.png'"><span class="thumb-shade"></span><span class="thumb-tag">FIELD NOTE 002</span><span class="thumb-contour"></span></div>
+        <div class="investigation-copy"><strong>Amazon · Forest change</strong><span>Illustrative case study <i class="status-dot"></i> Land cover</span></div>
+        <svg class="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+      <button class="new-investigation" id="newInvestigation"><span>＋</span> Start an investigation</button>
+
+      <div class="sidebar-divider"></div>
+      <div class="section-heading"><span class="section-label">MAP LAYERS</span><button class="text-button" id="resetLayers">Reset</button></div>
+      <label class="layer-row"><span class="layer-icon satellite-icon">◉</span><span class="layer-copy"><strong>Satellite basemap</strong><small>Esri World Imagery</small></span><input type="checkbox" id="satelliteLayer" checked/><span class="switch"></span></label>
+      <label class="layer-row"><span class="layer-icon roads-icon">◫</span><span class="layer-copy"><strong>NASA date comparison</strong><small>Daily MODIS true-colour imagery</small></span><input type="checkbox" id="compareLayer"/><span class="switch"></span></label>
+      <label class="layer-row"><span class="layer-icon flood-icon">≈</span><span class="layer-copy"><strong>Event overlay</strong><small>Illustrative demo geometry</small></span><input type="checkbox" id="floodLayer" checked/><span class="switch"></span></label>
+      <label class="layer-row"><span class="layer-icon terrain-icon">⌖</span><span class="layer-copy"><strong>Investigation points</strong><small>Areas to inspect</small></span><input type="checkbox" id="placesLayer" checked/><span class="switch"></span></label>
+      <label class="layer-row"><span class="layer-icon rain-icon">☂</span><span class="layer-copy"><strong>Rainfall context</strong><small>Illustrative, not measured data</small></span><input type="checkbox" id="rainLayer"/><span class="switch"></span></label>
+
+      <div class="sidebar-bottom">
+        <div class="data-note"><span class="pulse"></span><div><strong>Connected to the open web</strong><small>Satellite imagery from Esri and NASA GIBS. Event overlays are illustrative.</small></div></div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="breadcrumb"><span>Investigations</span><span class="slash">/</span><strong>Nepal flash flood</strong><span class="pill">DEMO</span></div>
+        <div class="top-actions"><button class="icon-button" id="shareButton" title="Export investigation snapshot" aria-label="Export snapshot"><svg viewBox="0 0 24 24"><path d="M12 15V3m-4 4 4-4 4 4M5 13v7h14v-7"/></svg></button><button class="primary-button" id="askEchoTop"><span class="sparkle">✳</span> Ask ECHO</button></div>
+      </header>
+
+      <section class="dashboard-view" id="dashboardView" aria-hidden="true">
+        <div class="dashboard-hero"><div class="eyebrow">YOUR EARTH DESK · 01</div><h2>Your investigations.<br><span>A changing planet.</span></h2><p>Keep your questions, evidence and places of interest in one place.</p><button class="primary-button" id="dashboardNewInvestigation"><span>＋</span> Start an investigation</button><div class="dashboard-orbit"></div></div>
+        <div class="dashboard-stats"><div><span>ACTIVE INVESTIGATIONS</span><strong id="dashboardCount">02</strong></div><div><span>DATA SOURCES</span><strong>NASA · Esri · Planet Labs</strong><small><a href="https://www.planet.com/" target="_blank" rel="noreferrer">Planet Labs ↗</a> · commercial imagery requires suitable access</small></div><div><span>WORKSPACE</span><strong>Evidence-led</strong></div></div>
+        <div class="dashboard-section-head"><div><div class="section-label">YOUR WORKSPACE</div><h3>My investigations</h3></div><div class="dashboard-section-actions"><button class="text-button dashboard-list-new" id="dashboardNewFromList">＋ Start an investigation</button><button class="text-button" id="dashboardViewAll">Open map view ↗</button></div></div>
+        <div class="dashboard-investigations" id="dashboardInvestigations"></div>
+
+
+
+        <div class="dashboard-section-head news-head"><div><div class="section-label">PLANET PULSE · LIVE FEED</div><h3>What’s happening on Earth</h3><p>Active geospatial events from NASA EONET. This is an event feed, not editorial news.</p></div><a class="text-button" href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noreferrer">NASA EONET ↗</a></div>
+        <div class="planet-news" id="planetNews"><div class="news-loading"><span class="pulse"></span> Connecting to NASA’s open event feed…</div></div>
+        <div class="dashboard-footnote">NASA EONET event data may be delayed or incomplete. Always follow the linked source for authoritative updates.</div>
+      </section>
+      <section class="community-view" id="communityView" aria-hidden="true">
+        <div class="community-page-heading"><div><div class="eyebrow">ECHO FIELD NETWORK · 03</div><h2>Better questions.<br><span>Shared discoveries.</span></h2><p>Connect the dots with people exploring a changing planet. This is a clickable interface preview; conversations are local to this browser.</p></div><div class="community-heading-mark"><span>✳</span><small>FIELD NOTES<br>TRAVEL FURTHER</small></div></div>
+        <section class="community-section" id="communitySection" aria-labelledby="communityTitle">
+          <div class="community-intro">
+            <div><div class="section-label">ECHO COMMUNITY · PREVIEW</div><h3 id="communityTitle">Curiosity travels further together.</h3><p>Compare notes with people who study our changing planet. This is a local, interactive preview — not a connected public network yet.</p></div>
+            <span class="community-pill"><span class="live-dot"></span> COMMUNITY PREVIEW</span>
+          </div>
+          <div class="community-grid">
+            <div class="community-main">
+              <div class="community-featured">
+                <div class="community-feature-image"><img src="https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=85" alt="Aerial view of a winding landscape" loading="eager" onerror="this.onerror=null;this.src='earth-fallback.png'"><span class="image-caption">EARTH OBSERVATION · FIELD NOTES</span></div>
+                <div class="community-feature-copy"><span class="community-topic">FIELD NOTES · FLOOD & WATER</span><h4>What can a satellite tell us after the clouds clear?</h4><p>Researchers are comparing radar and optical scenes to understand what changed — and what still needs ground validation.</p><div class="community-author"><span class="community-avatar avatar-blue">AM</span><span><strong>Amara M.</strong><small>Remote sensing · 2 hours ago</small></span><span class="community-replies">12 replies</span></div></div>
+              </div>
+              <div class="community-threads" id="communityThreads">
+                <article class="community-thread"><span class="thread-icon forest-thread">↗</span><div><span class="community-topic">FOREST MONITORING</span><h4>How do you separate seasonal change from forest loss?</h4><p>Looking for practical approaches to choosing comparable scenes.</p><div class="thread-meta"><span>Leo R. · 8 replies</span><span>Updated 38 min ago</span></div></div><button class="thread-open" data-thread="forest">Join discussion ↗</button></article>
+                <article class="community-thread"><span class="thread-icon data-thread">⌁</span><div><span class="community-topic">OPEN DATA</span><h4>Sentinel-1 or Sentinel-2 for a cloudy region?</h4><p>Sharing a simple workflow for combining radar and optical evidence.</p><div class="thread-meta"><span>Nina K. · 5 replies</span><span>Updated 1 hour ago</span></div></div><button class="thread-open" data-thread="data">Join discussion ↗</button></article>
+              </div>
+            </div>
+            <aside class="community-side">
+              <div class="community-side-head"><div><div class="section-label">FIELD CHAT</div><h4>Campfire</h4></div><span class="community-online"><i></i> 8 here</span></div>
+              <p class="community-side-description">A small preview of a live research room.</p>
+              <div class="community-chat" id="communityChat" aria-live="polite">
+                <div class="community-chat-message"><span class="community-avatar avatar-purple">SK</span><div><strong>Sofia K. <small>10:42</small></strong><p>Has anyone tried comparing the same season across years?</p></div></div>
+                <div class="community-chat-message"><span class="community-avatar avatar-amber">JT</span><div><strong>Jon T. <small>10:44</small></strong><p>Yes — it helps reduce seasonal differences, but clouds still matter.</p></div></div>
+                <div class="community-chat-message"><span class="community-avatar avatar-blue">AM</span><div><strong>Amara M. <small>10:46</small></strong><p>I also keep the acquisition dates with every screenshot.</p></div></div>
+              </div>
+              <form class="community-chat-form" id="communityChatForm"><input id="communityChatInput" maxlength="240" placeholder="Add a thought…" aria-label="Write a community chat message"><button type="submit" aria-label="Send community message">↑</button></form>
+              <div class="community-preview-note">Preview only · messages are not published or saved</div>
+            </aside>
+          </div>
+          <div class="community-bottom"><span>Built for careful questions, transparent sources and shared learning.</span><button class="text-button" id="communityGuidelines">Community principles ↗</button></div>
+        </section>
+      </section>
+      <section class="map-stage">
+        <div id="map" aria-label="Interactive map of Nepal"></div>
+        <div class="map-vignette"></div>
+        <div class="map-heading"><div class="live-label"><span class="live-dot"></span> EARTH REWIND</div><h2 id="mapTitle">When the river<br/>rewrote the map.</h2><p id="mapSubtitle">Central Nepal <span>·</span> August 2026</p></div>
+        <div class="map-tools"><button class="map-tool" id="zoomIn" aria-label="Zoom in">＋</button><button class="map-tool" id="zoomOut" aria-label="Zoom out">−</button><span class="tool-separator"></span><button class="map-tool compass" id="resetView" title="Reset map view" aria-label="Reset map view">⌖</button></div>
+        <div class="map-legend"><span class="legend-swatch"></span><span><strong id="legendTitle">Potential inundation</strong><small id="legendSubtitle">Conceptual overlay · not a validated flood map</small></span></div>
+        <div class="map-compare" id="mapCompare" aria-hidden="true"><div class="compare-label before-label" id="beforeLabel">BEFORE · 12 AUG 2026</div><div class="compare-label after-label" id="afterLabel">AFTER · 27 AUG 2026</div><div class="compare-divider" id="compareDivider"><span>↔</span></div><input type="range" id="compareSlider" min="0" max="100" value="50" aria-label="Slide to compare before and after satellite imagery" /><div class="compare-source" id="compareSource">NASA GIBS · MODIS TRUE COLOUR · DAILY COMPOSITE</div></div>
+        <div class="map-attribution">Imagery © <a href="https://www.esri.com/en-us/arcgis/products/arcgis-imagery" target="_blank" rel="noreferrer">Esri</a> · comparison imagery © <a href="https://earthdata.nasa.gov/" target="_blank" rel="noreferrer">NASA GIBS</a></div>
+        <div class="coordinate-chip"><span class="coord-icon">⌖</span><span id="coordinates">27.7172° N, 85.3240° E</span></div>
+      </section>
+
+      <section class="bottom-dock">
+        <div class="dock-head"><div><div class="section-label">TIME MACHINE</div><div class="dock-title">Move through the event <span class="date-chip" id="dateChip">27 AUG 2026</span></div></div><button class="play-button" id="playTimeline" aria-label="Play timeline">▶</button></div>
+        <div class="timeline-wrap"><div class="timeline-labels"><span>12 AUG</span><span>20 AUG</span><span>27 AUG</span><span>03 SEP</span></div><input type="range" id="timeline" min="0" max="3" step="1" value="2" aria-label="Event date"/><div class="timeline-track"><span class="timeline-progress" id="timelineProgress"></span><i class="tick tick-1"></i><i class="tick tick-2"></i><i class="tick tick-3"></i></div></div>
+        <div class="timeline-footer"><span id="timelineDescription">After the event · water visible beyond the usual river channel</span><button class="compare-button" id="compareButton"><span>◫</span> Compare before / after</button></div>
+      </section>
+    </main>
+
+    <aside class="inspector" id="inspector">
+      <div class="inspector-head"><div><div class="eyebrow">FIELD REPORT · 001</div><h2>What changed?</h2></div><button class="close-inspector" id="closeInspector" aria-label="Close report">×</button></div>
+      <div class="report-date"><span class="calendar-icon">▦</span><span><strong>27 August 2026</strong><small>Post-event observation</small></span><span class="report-status">ARCHIVE</span></div>
+      <div class="insight-callout"><div class="callout-icon">✳</div><div><strong>A river, out of bounds.</strong><p>Satellite imagery published by ESA shows a dramatic increase in river water after a flash flood in Nepal. ECHO's overlay here is a visual prototype, not an official flood delineation.</p><a href="https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-2/Nepal_flash_flood_imaged_by_satellites" target="_blank" rel="noreferrer">Read the ESA source ↗</a></div></div>
+      <div class="metric-grid"><div class="metric"><span>EVENT WINDOW</span><strong>12–27 <em>AUG</em></strong><small>Before / after imagery</small></div><div class="metric"><span>PRIMARY SENSOR</span><strong>Sentinel-2</strong><small>Optical · 10–20 m bands</small></div></div>
+      <div class="report-section"><div class="section-heading"><span class="section-label">EVIDENCE TRAIL</span><span class="evidence-count" id="evidenceCount">03 SOURCES</span></div><a class="evidence-row" href="https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-2/Nepal_flash_flood_imaged_by_satellites" target="_blank" rel="noreferrer"><span class="source-badge esa">ESA</span><span><strong>Before / after satellite images</strong><small>12 Aug vs 27 Aug · reported observation</small></span><span class="external">↗</span></a><a class="evidence-row" href="https://dataspace.copernicus.eu/" target="_blank" rel="noreferrer"><span class="source-badge cop">EU</span><span><strong>Copernicus Data Space</strong><small>Explore Sentinel archive</small></span><span class="external">↗</span></a><a class="evidence-row" href="https://gpm.nasa.gov/data/imerg" target="_blank" rel="noreferrer"><span class="source-badge nasa">N</span><span><strong>NASA GPM / IMERG</strong><small>Precipitation context</small></span><span class="external">↗</span></a></div>
+      <div class="report-section confidence-section"><div class="section-heading"><span class="section-label">INTERPRETATION</span><span class="confidence-label">EVIDENCE FIRST</span></div><div class="confidence-row"><span class="confidence-dot observed"></span><span><strong>Observed</strong><small>ESA reports expanded river water in imagery.</small></span></div><div class="confidence-row"><span class="confidence-dot inferred"></span><span><strong>To investigate</strong><small>Exact inundation extent and affected assets require processing and validation.</small></span></div><div class="confidence-row"><span class="confidence-dot unknown"></span><span><strong>Not yet established</strong><small>Damage totals, cause attribution, or future risk.</small></span></div></div>
+      <div class="report-section"><div class="section-heading"><span class="section-label">INVESTIGATION POINTS</span><span class="evidence-count">NEXT STEPS</span></div><div class="investigation-points" id="investigationPoints"><button class="investigation-point"><span>01</span><span><strong>Verify the event boundary</strong><small>Compare source scenes and record acquisition dates.</small></span><i>↗</i></button><button class="investigation-point"><span>02</span><span><strong>Check exposed places</strong><small>Overlay roads and settlements only after validation.</small></span><i>↗</i></button><button class="investigation-point"><span>03</span><span><strong>Review rainfall context</strong><small>Compare satellite estimates with local reports.</small></span><i>↗</i></button></div></div>
+      <button class="full-button" id="askEchoReport"><span class="sparkle">✳</span> Investigate with ECHO</button>
+    </aside>
+  </div>
+
+  
+
+  <div class="echo-panel" id="echoPanel" aria-hidden="true"><div class="echo-head"><div class="echo-avatar">✳</div><div><strong>Ask ECHO</strong><small>Your evidence-led field assistant</small></div><button class="close-inspector" id="closeEcho" aria-label="Close ECHO">×</button></div><div class="echo-context" id="echo-context"><span class="live-dot"></span> CONTEXT: NEPAL FLASH FLOOD <span class="context-dot">·</span> 2026</div><div class="chat-messages" id="chatMessages"><div class="assistant-message"><span class="message-icon">✳</span><div><strong>Let's investigate, not guess.</strong><p>I can help you explore the sources and plan the analysis. I’ll separate published observations from hypotheses and clearly flag what this prototype cannot verify.</p></div></div></div><div class="suggestions" id="suggestions"><button>What do we know for sure?</button><button>How could we map flood extent?</button><button>Which places might be exposed?</button></div><form class="chat-form" id="chatForm"><input id="chatInput" autocomplete="off" placeholder="Ask about the evidence…" aria-label="Ask ECHO a question"/><button type="submit" aria-label="Send question">↑</button></form><div class="chat-disclaimer" id="chatDisclaimer">Connecting to ECHO assistant… · Verify findings against source data.</div></div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="newInvestigationModal" aria-hidden="true"><div class="modal-card create-card"><div class="modal-head"><div><div class="eyebrow">START WITH A QUESTION</div><h2>New investigation</h2></div><button class="close-inspector" id="closeNewInvestigation" aria-label="Close new investigation form">×</button></div><p class="modal-intro">Give your investigation a name and a location. ECHO will create a workspace you can refine.</p><form id="newInvestigationForm" class="create-form"><label>Investigation name<input id="newTitle" required maxlength="72" placeholder="e.g. Coastal erosion watch" /></label><label>What are you investigating?<select id="newTopic"><option value="environment">Environmental change</option><option value="flood">Flood / water</option><option value="forest">Forest change</option><option value="fire">Wildfire</option><option value="urban">Urban growth</option><option value="other">Other</option></select></label><div class="coordinate-fields"><label>Latitude<input id="newLat" type="number" min="-85" max="85" step="0.0001" value="27.7172" required /></label><label>Longitude<input id="newLng" type="number" min="-180" max="180" step="0.0001" value="85.3240" required /></label></div><button class="primary-button" type="submit">Create investigation ↗</button></form><div class="modal-footnote">New workspaces are saved in this browser only. They are not synced across devices or accounts.</div></div></div>
+  <div class="modal-backdrop" id="infoModal" aria-hidden="true"><div class="modal-card info-card"><div class="modal-head"><div><div class="eyebrow">TRANSPARENCY BY DESIGN</div><h2>What powers ECHO?</h2></div><button class="close-inspector" id="closeInfo" aria-label="Close data information">×</button></div><p class="modal-intro">ECHO now loads dated, real NASA GIBS MODIS true-colour daily composite imagery for the swipe comparison, alongside Esri satellite basemap tiles. MODIS imagery is coarse (about 250–500 m depending on bands) and cloud conditions can obscure details. ECHO does not run flood segmentation, compute verified change, or provide operational forecasts.</p><div class="source-list"><a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noreferrer"><strong>NASA GIBS</strong><span>Dated MODIS daily composite imagery for the map comparison ↗</span></a><a href="https://dataspace.copernicus.eu/" target="_blank" rel="noreferrer"><strong>Copernicus</strong><span>Sentinel-1 radar and Sentinel-2 optical archives ↗</span></a><a href="https://gpm.nasa.gov/data/imerg" target="_blank" rel="noreferrer"><strong>NASA GPM / IMERG</strong><span>Satellite precipitation estimates ↗</span></a><a href="https://www.planet.com/" target="_blank" rel="noreferrer"><strong>Planet Labs</strong><span>Commercial imagery; requires appropriate access and licensing ↗</span></a><a href="https://www.esri.com/en-us/legal/terms/full-master-agreement" target="_blank" rel="noreferrer"><strong>Esri World Imagery</strong><span>Satellite basemap terms and attribution ↗</span></a></div><div class="modal-footnote">Never use this prototype as an emergency response tool. The flood layer is illustrative only.</div></div></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

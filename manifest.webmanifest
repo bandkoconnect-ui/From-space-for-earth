@@ -1,0 +1,14 @@
+{
+  "name": "ECHO · Explore a living Earth",
+  "short_name": "ECHO",
+  "description": "Explore what is happening on Earth right now, with NASA event reports, satellite imagery and honest field reports.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#03060c",
+  "theme_color": "#03060c",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

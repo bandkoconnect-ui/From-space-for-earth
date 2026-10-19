@@ -37,16 +37,17 @@ export const DEFAULT_LAYERS = Object.freeze({
 export class EchoMap {
   /**
    * @param {HTMLElement} element
-   * @param {{ compact?: boolean, imagery?: string, now?: () => Date }} [options]
+   * @param {{ compact?: boolean, imagery?: string, now?: () => Date, minZoom?: number, zoomSnap?: number,
+   *   zoomDelta?: number, layers?: Partial<typeof DEFAULT_LAYERS>, view?: { center: [number, number], zoom: number } }} [options]
    */
-  constructor(element, { compact = false, imagery = 'terra', now = () => new Date() } = {}) {
+  constructor(element, { compact = false, imagery = 'terra', now = () => new Date(), minZoom = 2, zoomSnap, zoomDelta, layers = {}, view = { center: [20, 10], zoom: 2 } } = {}) {
     const L = window.L;
     if (!L) throw new Error('Leaflet is not loaded');
     this.L = L;
     this.compact = compact;
     this.now = now;
     this.listeners = new Map();
-    this.layers = { ...DEFAULT_LAYERS };
+    this.layers = { ...DEFAULT_LAYERS, ...layers };
     this.imageryId = imagery;
     this.investigation = null;
     this.notes = [];
@@ -61,9 +62,10 @@ export class EchoMap {
       attributionControl: false,
       preferCanvas: true,
       worldCopyJump: true,
-      minZoom: 2,
+      minZoom,
       maxZoom: 18,
-      zoomSnap: compact ? 0.5 : 1,
+      zoomSnap: zoomSnap ?? (compact ? 0.5 : 1),
+      zoomDelta: zoomDelta ?? 1,
       tap: true
     });
     this.map = map;
@@ -88,15 +90,18 @@ export class EchoMap {
     this.compareAfter = null;
     this.dataLayers = new Map();
 
-    this.basemap.addTo(map);
-    this.labelsLayer.addTo(map);
-    [this.overlayGroup, this.eventGroup, this.pointsGroup, this.notesGroup, this.pulseGroup, this.draftGroup, this.userGroup].forEach((group) => group.addTo(map));
+    if (this.layers.satellite) this.basemap.addTo(map);
+    if (this.layers.labels) this.labelsLayer.addTo(map);
+    [this.pulseGroup, this.draftGroup, this.userGroup].forEach((group) => group.addTo(map));
+    if (this.layers.overlay) { this.overlayGroup.addTo(map); this.eventGroup.addTo(map); }
+    if (this.layers.points) this.pointsGroup.addTo(map);
+    if (this.layers.notes) this.notesGroup.addTo(map);
 
     map.on('mousemove', (e) => this.emit('coords', { lat: e.latlng.lat, lng: e.latlng.lng }));
     map.on('moveend', () => { const c = map.getCenter(); this.emit('moveend', { lat: c.lat, lng: c.lng, zoom: map.getZoom() }); });
     map.on('move zoom resize', () => this.updateClip());
     map.on('click', (e) => this.emit('mapclick', { lat: e.latlng.lat, lng: e.latlng.lng }));
-    map.setView([20, 10], 2);
+    map.setView(view.center, view.zoom);
   }
 
   pane(name, zIndex, passThrough = false) {

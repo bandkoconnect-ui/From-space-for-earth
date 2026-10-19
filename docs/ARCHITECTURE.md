@@ -2,15 +2,15 @@
 
 ## The idea
 
-Two apps, one brain. Everything that is not about screen size or the operating system lives once, in `packages/`, and both apps import it. Each app has its own interface because a three-pane desktop workspace and a one-handed phone screen are different designs, not one design squeezed.
+Three front ends, one brain. Everything that is not about screen size or the operating system lives once, in `packages/`, and every front end imports it. Each has its own interface: the web app is a living-planet map for discovery (responsive, with a separate phone layout), the desktop app is a three-pane workspace, and the phone app is a native-feeling map with tabs.
 
 ```
 packages/core   logic, no DOM        ← unit-tested in Node
 packages/map    Leaflet map controller
 packages/ui     DOM helper, artwork, shared actions, base styles
-        ▲                ▲
-apps/desktop             apps/mobile
-Electron + desktop UI    Capacitor + phone UI
+        ▲                 ▲                    ▲
+apps/web (+ index.html)   apps/desktop          apps/mobile
+GitHub Pages, any browser Electron + desktop UI Capacitor + phone UI
 ```
 
 There is **no bundler and no runtime npm dependency**. The code is plain ES modules; Leaflet is vendored as ES modules in `vendor/leaflet`. `scripts/build.mjs` copies an app's files plus the three shared packages, Leaflet and `assets/` into `dist/<app>/`. Electron loads `dist/desktop`; Capacitor wraps `dist/mobile`. This keeps builds fast and removes a whole class of tooling breakage. The cost: no TypeScript or tree-shaking. If the code grows enough to want them, add a bundler at `scripts/build.mjs` and nothing else has to change.
@@ -45,6 +45,24 @@ platform.saveFile({ name, content, mime, filters })
 platform.pickFile({ accept, filters })
 platform.info()
 ```
+
+## Web (`index.html`, `apps/web`)
+
+No build step: `index.html` loads `apps/web/app/main.js` as an ES module, which imports the shared packages straight from `packages/` and Leaflet from `vendor/leaflet`. All paths are relative, so the same files work at `/` and under GitHub Pages' `/From-space-for-earth/` sub-path. Routing is in the URL hash (`router.js`), because Pages cannot send every path to one page.
+
+| Module | Job |
+| --- | --- |
+| `main.js` | Wires everything and owns the one piece of state: the selection, filters, imagery date and panel layout. Every way of choosing something (pin, list, search, link, keyboard) goes through `app.select()`, so the map, the sidebar, the report and the address bar cannot disagree. |
+| `atlas.js` | The map, built on the shared `EchoMap`: event pins and clusters, the selected event's track, the searched place, day/night shading, and camera moves that frame the subject in the area not covered by panels (`insets`). Closing a report never moves the camera. |
+| `cluster.js` | Screen-space clustering (pure). The newest event leads each cluster; the selected pin is never clustered. |
+| `subjects.js` | The Field Report model (pure): turns an EONET event or an investigation into sections, keeping source facts, interpretation and unknowns separate. Also finds hotspots (three or more nearby events of one kind). |
+| `sources.js` | Readable names for EONET's reporting organisations, NASA GIBS snapshot URLs, and the near-real-time viewers for a longitude. |
+| `geocode.js`, `search.js` | Place search: Photon, then Open-Meteo, plus instant local matches and typed coordinates, in an accessible combobox. |
+| `sidebar.js`, `report.js`, `dialogs.js`, `ui.js` | The interface. `sheet.js` turns the sidebar and the report into bottom sheets below 720 px. |
+| `terminator.js` | The Sun's position and the night-side polygon (pure). |
+| `config.js` | Settings you may change when deploying (event count, search services). Nothing secret. |
+
+The web app stores data under its own browser key (`echo-web-v1`) and reads the same backup format as the other apps.
 
 ## Desktop (`apps/desktop`)
 

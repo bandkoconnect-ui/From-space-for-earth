@@ -1,11 +1,13 @@
 # Browser tests
 
-These drive the built apps in headless Chromium with Playwright. They run the real app code, but **all network traffic is faked**: map tiles are solid colours keyed by the requested date (so tests can check which date is on screen by reading pixels), NASA EONET returns three fixed events, and the AI service is a stub. They never touch NASA, Esri or any real server.
+These drive the built apps in headless Chromium with Playwright. They run the real app code, but **all network traffic is faked**: map tiles are solid colours keyed by the requested date (so tests can check which date is on screen by reading pixels), NASA EONET returns a fixed set of events, the place-search services return fixed answers, and the AI service is a stub. Any other request is blocked and reported, so a forgotten outside dependency fails the test. They never touch NASA, Esri or any real server.
 
 What they cover:
 
 | Suite | Checks |
 | --- | --- |
+| `web_desktop` | The GitHub Pages web app at 1440 x 900, served under `/From-space-for-earth/`: opens on the map, pins and clusters, opening, switching and closing reports without moving the camera, search (places, regions, countries, events, coordinates, both services down), sidebar sync, filters, hotspots, compare, imagery dates, layers, save, notes, export, Ask ECHO, investigate a place, reload from the address, settings, keyboard-only use, reduced motion, offline, and the kept `/legacy/` prototype |
+| `web_mobile` | The web app on a phone (390 x 844, touch) and at 320 x 568, 360 x 740, 844 x 390, 768 x 1024 and 1280 x 720: bottom sheets, search with the keyboard in mind, pin taps, report sheet, compare by touch, picking a place, dialogs, no overflow |
 | `desktop_explore` | Explore screen: map, timeline, before/after compare, layers, report, Ask ECHO, inspector |
 | `desktop_pages` | Home, investigations library, Planet Pulse, settings, backup/import, about, keyboard use |
 | `desktop_offline` | Offline and failure behaviour: cached events, imagery failure banner |
@@ -22,6 +24,7 @@ What they do **not** cover: the real Electron shell (menus, native dialogs, pack
 pip install playwright pillow
 playwright install chromium
 python3 tools/e2e/run.py            # everything
+python3 tools/e2e/run.py web        # only the web app
 python3 tools/e2e/run.py phone      # only the phone app
 ```
 

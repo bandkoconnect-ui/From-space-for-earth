@@ -15,6 +15,7 @@
     "test": "node --test \"packages/**/test/*.test.js\" \"apps/**/test/*.test.js\" \"netlify/**/test/*.test.js\"",
     "build": "node scripts/build.mjs",
     "serve": "node scripts/serve.mjs",
+    "serve:web": "node scripts/serve.mjs web",
     "dev:desktop": "node scripts/build.mjs desktop && node scripts/serve.mjs desktop",
     "dev:mobile": "node scripts/build.mjs mobile && node scripts/serve.mjs mobile",
     "desktop": "node scripts/build.mjs desktop && electron .",

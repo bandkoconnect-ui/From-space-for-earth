@@ -1,19 +1,22 @@
 #!/usr/bin/env node
-// Minimal static server for development: node scripts/serve.mjs [desktop|mobile] [port]
+// Minimal static server for development: node scripts/serve.mjs [web|desktop|mobile] [port]
+//   web      the repository root, exactly what GitHub Pages serves (no build needed)
+//   desktop  dist/desktop (run node scripts/build.mjs desktop first)
+//   mobile   dist/mobile
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const target = ['desktop', 'mobile'].includes(process.argv[2]) ? process.argv[2] : 'desktop';
-const port = Number(process.argv[3] || process.env.PORT || (target === 'desktop' ? 5173 : 5174));
-const base = join(root, 'dist', target);
+const target = ['web', 'desktop', 'mobile'].includes(process.argv[2]) ? process.argv[2] : 'desktop';
+const port = Number(process.argv[3] || process.env.PORT || ({ desktop: 5173, mobile: 5174, web: 5175 })[target]);
+const base = target === 'web' ? root : join(root, 'dist', target);
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.md': 'text/markdown; charset=utf-8'
+  '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.md': 'text/markdown; charset=utf-8', '.webmanifest': 'application/manifest+json'
 };
 
 if (!existsSync(base)) { console.error(`dist/${target} not found. Run: node scripts/build.mjs ${target}`); process.exit(1); }
