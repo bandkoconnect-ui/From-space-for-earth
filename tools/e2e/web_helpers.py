@@ -115,10 +115,16 @@ async def fake_world(context, log, eonet="ok", geocode="ok", events=None, chat=N
         await route.abort("blockedbyclient")
     await context.route(re.compile(r"https://(?!server\.arcgisonline\.com|gibs\.earthdata\.nasa\.gov|eonet\.gsfc\.nasa\.gov|photon\.komoot\.io|geocoding-api\.open-meteo\.com|chat\.example\.test).*"), block)
 
+# A signed-in test account (device accounts), seeded once so the sign-in screen is skipped.
+# Only written when nothing is stored yet, so logging out inside a test sticks across reloads.
+SIGNED_IN = """(() => { try { if (!localStorage.getItem('echo-web-auth-v1')) {
+  localStorage.setItem('echo-web-auth-v1', JSON.stringify({ users: [{ id: 'u-test', name: 'Test Person', email: 'test@example.com', salt: '00000000000000000000000000000000', iterations: 1000, hash: 'x', createdAt: '2026-10-01T00:00:00Z' }], session: { userId: 'u-test', at: 0 } }));
+  localStorage.setItem('echo-web-pref-returning', 'true'); } } catch (e) {} })();"""
+
 FROZEN_TIME = "2026-10-19T12:00:00Z"
 CLOCK = "(() => { const T = new Date('%s').getTime(); const D = Date; class F extends D { constructor(...a) { super(...(a.length ? a : [T + (performance.now())])); } static now() { return T + performance.now(); } } window.Date = F; })();" % FROZEN_TIME
 
-async def open_web(p, port, log, problems, w=1440, h=900, mobile=False, scale=1, eonet="ok", geocode="ok", events=None, init=None, hash="", chat=None, storage=None, permissions=None, geo=None, reduced=False):
+async def open_web(p, port, log, problems, w=1440, h=900, mobile=False, scale=1, eonet="ok", geocode="ok", events=None, init=None, hash="", chat=None, storage=None, permissions=None, geo=None, reduced=False, signed_in=True, wait_ready=True):
     b = await p.chromium.launch()
     kw = dict(viewport={"width": w, "height": h}, device_scale_factor=scale, is_mobile=mobile, has_touch=mobile, accept_downloads=True, timezone_id="Europe/Berlin", locale="en-GB")
     if permissions: kw["permissions"] = permissions
@@ -127,13 +133,15 @@ async def open_web(p, port, log, problems, w=1440, h=900, mobile=False, scale=1,
     ctx = await b.new_context(**kw)
     await fake_world(ctx, log, eonet=eonet, geocode=geocode, events=events, chat=chat)
     await ctx.add_init_script(CLOCK)
+    if signed_in: await ctx.add_init_script(SIGNED_IN)
     if storage: await ctx.add_init_script(storage)
     if init: await ctx.add_init_script(init)
     page = await ctx.new_page()
     watch(page, problems)
     await page.goto(f"http://127.0.0.1:{port}{SUBPATH}/{hash}")
-    await page.wait_for_selector(".app.is-ready", timeout=10000)
-    await page.wait_for_timeout(600)
+    if wait_ready:
+        await page.wait_for_selector(".app.is-ready", timeout=10000)
+        await page.wait_for_timeout(600)
     return b, ctx, page
 
 results = []

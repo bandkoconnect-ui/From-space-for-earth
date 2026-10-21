@@ -15,7 +15,7 @@ import pathlib, subprocess, sys, time
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 OUT = HERE / "out"
-SUITES = ["web_desktop", "web_mobile", "desktop_explore", "desktop_pages", "desktop_offline", "phone_explore", "phone_pages", "phone_native", "phone_sizes"]
+SUITES = ["web_desktop", "web_mobile", "web_auth", "desktop_explore", "desktop_pages", "desktop_offline", "phone_explore", "phone_pages", "phone_native", "phone_sizes"]
 
 def main(argv):
     wanted = argv[1:] or ["all"]

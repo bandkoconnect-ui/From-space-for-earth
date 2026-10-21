@@ -7,6 +7,7 @@ What they cover:
 | Suite | Checks |
 | --- | --- |
 | `web_desktop` | The GitHub Pages web app at 1440 x 900, served under `/From-space-for-earth/`: opens on the map, pins and clusters, opening, switching and closing reports without moving the camera, search (places, regions, countries, events, coordinates, both services down), sidebar sync, filters, hotspots, compare, imagery dates, layers, save, notes, export, Ask ECHO, investigate a place, reload from the address, settings, keyboard-only use, reduced motion, offline, and the kept `/legacy/` prototype |
+| `web_auth` | Accounts on the web app: sign-up and log-in screen, validation, the three welcome cards (only after sign-up; Next, Back, Skip, Escape), staying signed in, log out and back in, wrong password, duplicate email, phones, and Ask ECHO's coming-soon message |
 | `web_mobile` | The web app on a phone (390 x 844, touch) and at 320 x 568, 360 x 740, 844 x 390, 768 x 1024 and 1280 x 720: bottom sheets, search with the keyboard in mind, pin taps, report sheet, compare by touch, picking a place, dialogs, no overflow |
 | `desktop_explore` | Explore screen: map, timeline, before/after compare, layers, report, Ask ECHO, inspector |
 | `desktop_pages` | Home, investigations library, Planet Pulse, settings, backup/import, about, keyboard use |

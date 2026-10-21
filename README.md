@@ -23,7 +23,8 @@ The original single-page prototype is kept unchanged at `legacy/` (served at `/l
 - **Planet Pulse**: NASA EONET's open natural events (fires, storms, volcanoes, floods) as a list and a map, with one tap to start an investigation from an event.
 - **Notes**: pin dated observations on the map. Private to the device.
 - **Report**: what is observed, inferred and not known, with an evidence trail and suggested next steps. Export as a Markdown report or back up everything as one JSON file.
-- **Ask ECHO**: built-in research guidance that works offline, or live answers from an AI service you run (see below).
+- **Accounts** (web app): sign up or log in before the map; three skippable welcome cards after signing up. See [docs/ACCOUNTS.md](docs/ACCOUNTS.md).
+- **Ask ECHO**: switched off in the web app for now (it shows "coming soon"). In the desktop and phone apps: built-in research guidance that works offline, or live answers from an AI service you run (see below).
 - Works offline for what is already on the device; the last event list is cached.
 
 It is a research aid, not an alerting or mapping product. MODIS and VIIRS imagery is about 250 to 375 m per pixel and clouds hide the ground. Nothing here detects floods or deforestation, and illustrative overlays are labelled as such. Do not use it for emergency response or operational decisions.

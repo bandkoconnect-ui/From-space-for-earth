@@ -16,6 +16,9 @@ import { DEFAULT_PROVIDERS, inBounds, nearbyRadiusKm, zoomForPlace } from './geo
 import { eventReport, investigationReport } from './subjects.js';
 import { gibsSnapshotUrl } from './sources.js';
 import { CONFIG } from './config.js';
+import { browserStorage, createAuth, initials } from './auth.js';
+import { showGate } from './gate.js';
+import { showOnboarding } from './onboarding.js';
 
 const MOBILE = '(max-width: 719px)';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -24,6 +27,23 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 async function boot() {
   const root = document.getElementById('app');
+
+  /* ---------------- account: sign up or log in before the map ---------------- */
+  const authStorage = browserStorage();
+  let auth;
+  try { auth = createAuth(CONFIG.auth, { storage: authStorage }); } catch (error) { console.error(error); auth = createAuth({}, { storage: authStorage }); }
+  let user = await auth.current();
+  let isNew = false;
+  if (!user) {
+    root.classList.add('is-gated');
+    ({ user, isNew } = await showGate(root, auth, {
+      initialMode: readPref('returning', false) ? 'login' : 'signup',
+      note: auth.kind === 'device' ? 'Preview: your account is saved in this browser only.' : ''
+    }));
+    root.classList.remove('is-gated');
+  }
+  writePref('returning', true);
+
   const platform = createPlatform();
   const store = createStore(platform.storage);
   await store.load();
@@ -45,6 +65,10 @@ async function boot() {
   };
 
   const app = { state, store, feed, ui, platform, config: { geocoders: CONFIG.geocoders || DEFAULT_PROVIDERS }, reducedMotion };
+  app.user = user;
+  app.authKind = auth.kind;
+  app.userInitials = initials(user.name, user.email);
+  app.logOut = async () => { await auth.logOut(); location.reload(); };
   app.actions = createActions({ store, platform, ui, openInvestigation: (id) => app.openInvestigation(id) });
   app.dialogs = createDialogs(app);
 
@@ -752,6 +776,8 @@ async function boot() {
 
   window.__echo = { app, atlas, state }; // for tests and the browser console
   root.classList.add('is-ready');
+  // New accounts get the three welcome cards once; people logging back in go straight to the map.
+  if (isNew) showOnboarding({ name: user.name });
 }
 
 function readPref(key, fallback) {

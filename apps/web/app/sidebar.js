@@ -10,6 +10,7 @@ import { terrainArt } from '../../../packages/ui/art.js';
 import { createSearch } from './search.js';
 import { eventSummary, findHotspots, isRecent, placeFromTitle } from './subjects.js';
 import { categoryIcon, ic, revealIn } from './ui.js';
+import { accountDialog } from './gate.js';
 
 const FIRST_PAGE = 12;
 
@@ -53,7 +54,9 @@ export function createSidebar(app) {
   root.append(grab,
     h('header', { class: 'sb-head' },
       h('div', { class: 'brand' }, h('img', { src: 'assets/icons/favicon-32.png', alt: '', width: 22, height: 22 }), h('span', { class: 'brand-name' }, 'ECHO'), h('span', { class: 'brand-line' }, 'Earth intelligence')),
-      collapse),
+      h('div', { class: 'sb-head-actions' },
+        app.user ? h('button', { type: 'button', class: 'avatar', id: 'account-button', 'aria-label': `Account: ${app.user.name || app.user.email}`, title: 'Account', onClick: () => accountDialog(app, app.user) }, app.userInitials) : null,
+        collapse)),
     search.el, status, body, foot);
 
   /* ---------- status (is this information current?) ---------- */
