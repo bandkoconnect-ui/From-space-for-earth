@@ -86,4 +86,4 @@ legacy/              The original web prototype, unchanged
 
 ## Data and licences
 
-Imagery and data come from NASA GIBS and NASA EONET (open, attribution requested) and Esri World Imagery (check Esri's terms before publishing a commercial app; see `docs/RELEASING.md`). Map engine: Leaflet (BSD 2-Clause), included in `vendor/leaflet`. The project itself is marked `UNLICENSED` in `package.json`: choose a licence before you invite contributors.
+Imagery and data come from NASA GIBS and NASA EONET (open, attribution requested) and Esri World Imagery (check Esri's terms before publishing a commercial app; see `docs/RELEASING.md`). Map engine: Leaflet (BSD 2-Clause), included in `vendor/leaflet`. ECHO itself is proprietary: **all rights reserved**. The code is public so it can be viewed and served by GitHub Pages, not reused. See [LICENSE](LICENSE).
