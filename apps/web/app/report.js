@@ -4,7 +4,7 @@
 import { h, mount } from '../../../packages/ui/dom.js';
 import { formatDate, formatDateLong, relativeDays } from '../../../packages/core/src/dates.js';
 import { formatLatLng } from '../../../packages/core/src/geo.js';
-import { SUGGESTIONS, ask } from '../../../packages/core/src/chat.js';
+import { SUGGESTIONS } from '../../../packages/core/src/chat.js';
 import { pluralise } from '../../../packages/core/src/text.js';
 import { gibsSnapshotUrl } from './sources.js';
 import { formatNumber } from './subjects.js';
@@ -50,7 +50,6 @@ function sparkline(series) {
 export function createReport(app) {
   const { state, store, ui } = app;
   let model = null;
-  const chats = new Map(); // subject id -> messages
 
   const root = h('section', { class: 'report panel', id: 'report', 'aria-labelledby': 'report-title', hidden: true, tabindex: '-1' });
   const grab = h('button', { type: 'button', class: 'sheet-grab', 'aria-label': 'Resize the field report', onClick: () => app.cycleSheet?.('report') }, h('span'));
@@ -89,7 +88,7 @@ export function createReport(app) {
   }
 
   function renderNav() {
-    mount(nav, ...SECTIONS.map(([id, label]) => h('a', { href: `#rs-${id}`, class: 'nav-link', onClick: (e) => { e.preventDefault(); app.expandReport?.(); requestAnimationFrame(() => revealIn(body, body.querySelector(`#rs-${id}`), { block: 'start', smooth: !app.reducedMotion })); } }, label)));
+    mount(nav, ...SECTIONS.map(([id, label]) => h('a', { href: `#rs-${id}`, class: 'nav-link', onClick: (e) => { e.preventDefault(); app.expandReport?.(); if (id === 'ask') askSoon(); requestAnimationFrame(() => revealIn(body, body.querySelector(`#rs-${id}`), { block: 'start', smooth: !app.reducedMotion })); } }, label)));
   }
 
   const section = (id, title, ...children) => h('section', { class: 'rs', id: `rs-${id}`, 'aria-labelledby': `rs-${id}-h` }, h('h3', { class: 'rs-title', id: `rs-${id}-h` }, title), ...children);
@@ -210,41 +209,18 @@ export function createReport(app) {
       h('p', { class: 'caveat' }, ic('info', { size: 14 }), 'No verified live camera or video stream is connected for this place. The satellite viewers above are the freshest public pictures available.'));
   }
 
-  /* ---------------- H. ask ECHO ---------------- */
+  /* ---------------- H. ask ECHO (coming soon) ---------------- */
+  // The assistant is switched off for now. The section stays, so people can see what is coming,
+  // and anything they try with it explains that it is on the way.
+  const ASK_SOON = 'Ask ECHO will be here soon. We are still building it.';
+  function askSoon() { ui.toast(ASK_SOON); }
   function askSection() {
-    const id = model.id;
-    const list = h('div', { class: 'chat-log', role: 'log', 'aria-live': 'polite' });
-    const box = h('textarea', { class: 'input chat-input', rows: 1, maxlength: 3000, placeholder: 'Ask about this place…', 'aria-label': 'Question for ECHO' });
-    const send = h('button', { type: 'submit', class: 'icon-button chat-send', 'aria-label': 'Send question' }, ic('send', { size: 18 }));
-    const endpoint = state.settings.chatEndpoint;
-    const renderLog = () => {
-      const messages = chats.get(id) || [];
-      mount(list, ...messages.map((m) => h('div', { class: `msg msg-${m.role}${m.pending ? ' is-pending' : ''}` },
-        m.title && m.role === 'assistant' ? h('strong', null, m.title) : null,
-        h('p', null, m.content),
-        m.links?.length ? h('div', { class: 'msg-links' }, m.links.map(([label, url]) => h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, label))) : null,
-        m.fallbackReason ? h('small', null, `${m.fallbackReason} This answer is from the built-in guide.`) : null)));
-      list.hidden = !messages.length;
-    };
-    async function submit(text) {
-      const question = text.trim();
-      if (!question) return;
-      box.value = '';
-      const history = [...(chats.get(id) || []).filter((m) => !m.pending), { role: 'user', content: question }];
-      chats.set(id, [...history, { role: 'assistant', content: 'Thinking…', pending: true }]);
-      renderLog();
-      const answer = await ask({ question, history, investigation: model.investigation, notes: [], dateIso: app.currentImageryDate(), endpoint });
-      chats.set(id, [...history, { role: 'assistant', content: answer.text, title: answer.title, links: answer.links || [], fallbackReason: answer.fallbackReason }].slice(-40));
-      if (model?.id === id) renderLog();
-    }
-    box.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(box.value); } });
-    const node = section('ask', 'Ask ECHO',
-      h('p', { class: 'rs-note' }, endpoint ? `Answers come from your AI service (${hostOf(endpoint)}) and can be wrong. Check them against the sources.` : 'Built-in research guide: practical advice for investigating, not facts about this event. Connect an AI service in Settings for live answers.'),
-      h('div', { class: 'chips' }, SUGGESTIONS.map((s) => h('button', { type: 'button', class: 'chip', onClick: () => submit(s) }, s))),
-      list,
-      h('form', { class: 'chat-form', onSubmit: (e) => { e.preventDefault(); submit(box.value); } }, box, send));
-    renderLog();
-    return node;
+    const box = h('textarea', { class: 'input chat-input', rows: 1, readonly: true, placeholder: 'Ask about this place…', 'aria-label': 'Question for ECHO (coming soon)', onFocus: askSoon });
+    const send = h('button', { type: 'button', class: 'icon-button chat-send', 'aria-label': 'Send question (coming soon)' }, ic('send', { size: 18 }));
+    return section('ask', 'Ask ECHO',
+      h('p', { class: 'rs-note soon-note' }, h('span', { class: 'tag tag-soon' }, 'Coming soon'), 'An evidence-led assistant for questions about this place.'),
+      h('div', { class: 'chips is-soon' }, SUGGESTIONS.map((q) => h('button', { type: 'button', class: 'chip', onClick: askSoon }, q))),
+      h('form', { class: 'chat-form is-soon', onSubmit: (e) => { e.preventDefault(); askSoon(); }, onClick: (e) => { if (e.target !== box) askSoon(); } }, box, send));
   }
 
   // Highlight the section being read in the quick navigation.

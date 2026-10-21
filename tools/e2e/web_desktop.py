@@ -253,8 +253,8 @@ async def main():
         md = open(path).read()
         check("D75 export downloads a Markdown field report with the notes", d.suggested_filename.endswith(".md") and "Smoke visible" in md, d.suggested_filename)
         await page.click(".rs:has(.rs-title:text('Ask ECHO')) .chip >> nth=0")
-        await page.wait_for_selector(".msg-assistant:not(.is-pending)", timeout=4000)
-        check("D76 Ask ECHO answers with the built-in guide", await page.locator(".msg-assistant").count() == 1)
+        await page.wait_for_selector(".toast:has-text('Ask ECHO will be here soon')", timeout=3000)
+        check("D76 Ask ECHO is switched off and says it is coming soon", await page.locator(".msg-assistant").count() == 0 and await page.is_visible(".rs:has(.rs-title:text('Ask ECHO')) .tag-soon"))
 
         # ---- investigate a place ----
         await page.click(".report-close")

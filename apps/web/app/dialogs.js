@@ -1,7 +1,7 @@
 // Settings, About the data, and New investigation, as modal dialogs.
 
 import { h } from '../../../packages/ui/dom.js';
-import { IMAGERY_LAYERS, TOPICS, TOPIC_ORDER, ValidationError, askLive, createInvestigation, formatLatLng, normalizeEndpoint, parseCoordinates } from '../../../packages/core/src/index.js';
+import { IMAGERY_LAYERS, TOPICS, TOPIC_ORDER, ValidationError, createInvestigation, formatLatLng, parseCoordinates } from '../../../packages/core/src/index.js';
 import { aboutDataContent } from '../../../packages/ui/about-data.js';
 import { ic } from './ui.js';
 
@@ -41,34 +41,21 @@ export function createDialogs(app) {
     const state = { imagery: current.imagery };
     const labels = h('input', { type: 'checkbox', checked: current.showLabels });
     const night = h('input', { type: 'checkbox', checked: app.state.layers.night });
-    const endpoint = h('input', { class: 'input mono', type: 'url', inputmode: 'url', value: current.chatEndpoint, placeholder: 'https://your-site.netlify.app/.netlify/functions/echo-chat', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'AI service address' });
-    const status = h('p', { class: 'rs-note', role: 'status' });
     const error = h('p', { class: 'field-error', role: 'alert' });
-
-    async function test() {
-      error.textContent = '';
-      let url;
-      try { url = normalizeEndpoint(endpoint.value); } catch (e) { error.textContent = e.message; return; }
-      if (!url) { status.textContent = 'No address set. Ask ECHO uses the built-in research guide.'; return; }
-      status.textContent = 'Testing…';
-      try {
-        const result = await askLive({ endpoint: url, timeoutMs: 15000, payload: { investigation: { title: 'Connection test', topic: 'other', date: '', sourceText: '', evidence: [], notes: [] }, messages: [{ role: 'user', content: 'Reply with the single word: ready' }] } });
-        status.textContent = `Connected. The service replied: “${result.text.slice(0, 80)}”`;
-      } catch (e) {
-        status.textContent = '';
-        error.textContent = `That address did not work (${e.name === 'AbortError' ? 'no reply in time' : e.message}).`;
-      }
-    }
+    const user = app.user;
 
     const body = h('div', { class: 'settings' },
+      user ? h('section', null, h('h3', null, 'Account'),
+        h('div', { class: 'account-id' }, h('span', { class: 'avatar avatar-lg', 'aria-hidden': 'true' }, app.userInitials),
+          h('div', null, h('strong', null, user.name || 'Your account'), h('span', null, user.email))),
+        app.authKind === 'device' ? h('p', { class: 'rs-note' }, 'This account is saved in this browser only.') : null,
+        h('button', { type: 'button', class: 'btn btn-small', onClick: () => app.logOut() }, 'Log out')) : null,
       h('section', null, h('h3', null, 'Map'),
         h('div', { class: 'field' }, h('span', null, 'NASA imagery source'), choiceChips(IMAGERY_LAYERS.map((l) => ({ value: l.id, label: l.label })), state.imagery, (v) => { state.imagery = v; }, 'NASA imagery source')),
         h('label', { class: 'switch-row' }, labels, h('span', { class: 'switch' }), h('span', null, 'Place names')),
         h('label', { class: 'switch-row' }, night, h('span', { class: 'switch' }), h('span', null, 'Day and night shading'))),
       h('section', null, h('h3', null, 'Ask ECHO'),
-        h('p', { class: 'rs-note' }, 'Without an AI service, Ask ECHO gives built-in research guidance. For live answers, enter the address of a server you run (see docs/WEB_APP.md). Never put an API key in this page.'),
-        h('label', { class: 'field' }, h('span', null, 'AI service address (optional)'), endpoint),
-        h('button', { type: 'button', class: 'btn btn-small', onClick: test }, 'Test connection'), status),
+        h('p', { class: 'rs-note soon-note' }, h('span', { class: 'tag tag-soon' }, 'Coming soon'), 'An evidence-led assistant for questions about any place.')),
       h('section', null, h('h3', null, 'Your data'),
         h('p', { class: 'rs-note' }, `Saved investigations and notes are stored in ${info.dataFile}. Clearing your browser data removes them, so export a backup now and then.`),
         h('div', { class: 'button-stack' },
@@ -89,12 +76,12 @@ export function createDialogs(app) {
       actions: [{ label: 'Cancel', kind: 'quiet' }, {
         label: 'Save settings', kind: 'primary', onClick: () => {
           try {
-            store.setSettings({ imagery: state.imagery, showLabels: labels.checked, chatEndpoint: endpoint.value });
+            store.setSettings({ imagery: state.imagery, showLabels: labels.checked, chatEndpoint: current.chatEndpoint });
             app.setNight(night.checked);
             ui.toast('Settings saved.');
             return true;
           } catch (e) {
-            if (e instanceof ValidationError) { error.textContent = e.message; endpoint.focus(); return false; }
+            if (e instanceof ValidationError) { error.textContent = e.message; return false; }
             throw e;
           }
         }
