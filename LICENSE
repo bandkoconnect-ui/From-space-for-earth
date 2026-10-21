@@ -1,0 +1,16 @@
+Copyright (c) 2026 bandkoconnect. All rights reserved.
+
+ECHO, including its source code, design, interface, text, graphics and
+documentation in this repository, is proprietary.
+
+The source is published so that it can be viewed and so that the ECHO web
+app can be served from GitHub Pages. Viewing it does not grant any licence.
+No part of this repository may be copied, modified, distributed, published,
+sublicensed or used to create derivative works, in whole or in part, without
+prior written permission from the copyright holder.
+
+Contact: bandkoconnect@gmail.com
+
+Third-party components keep their own licences and terms, including Leaflet
+(BSD 2-Clause, in vendor/leaflet), NASA GIBS and NASA EONET data, and Esri
+World Imagery. See README.md, section "Data and licences".
