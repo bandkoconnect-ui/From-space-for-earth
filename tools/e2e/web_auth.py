@@ -137,7 +137,7 @@ async def main():
         await page.wait_for_selector(OB, timeout=10000)
         await page.wait_for_timeout(500)
         ob = await rect(page, OB)
-        check("A33 the cards sit as a bottom sheet inside the screen", ob["x"] >= 0 and ob["r"] <= 391 and ob["b"] <= 845, ob)
+        check("A33 the cards float inside the phone screen, like desktop", ob["x"] >= 8 and ob["r"] <= 382 and ob["y"] >= 8 and ob["b"] <= 836, ob)
         await page.screenshot(path="auth-cards-phone.png")
         await page.click(".ob-skip")
         for _ in range(3):  # open the explore sheet until its footer (About, Settings) shows

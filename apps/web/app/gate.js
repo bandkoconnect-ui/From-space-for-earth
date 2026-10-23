@@ -13,6 +13,29 @@ function svgIcon(paths, size = 18) {
     paths.map((d) => h('svg:path', { d })));
 }
 
+/** A still field of stars, like the ECHO website: three sizes, a few tinted mint. */
+function drawSky(canvas) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = canvas.clientWidth || innerWidth;
+  const hgt = canvas.clientHeight || innerHeight;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(hgt * dpr);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  let seed = 20261023;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const count = Math.round((w * hgt) / 3800);
+  for (let i = 0; i < count; i += 1) {
+    const d = rnd();
+    const r = (d < 0.65 ? 0.5 : d < 0.92 ? 0.85 : 1.3) * dpr;
+    ctx.globalAlpha = (d < 0.65 ? 0.35 : d < 0.92 ? 0.55 : 0.85) * (0.6 + rnd() * 0.4);
+    ctx.fillStyle = rnd() < 0.07 ? '#bff8dc' : '#e8f0f8';
+    ctx.beginPath();
+    ctx.arc(rnd() * canvas.width, rnd() * canvas.height, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 export function showGate(root, auth, { initialMode = 'signup', note = '' } = {}) {
   return new Promise((resolve) => {
     let mode = initialMode;
@@ -51,14 +74,28 @@ export function showGate(root, auth, { initialMode = 'signup', note = '' } = {})
     const card = h('section', { class: 'gate-card', 'aria-labelledby': 'gate-title' },
       h('div', { class: 'gate-brand' }, h('img', { src: 'assets/icons/icon-192.png', alt: '', width: 40, height: 40 }), h('span', null, 'ECHO')),
       title, lead, tabs, form, note ? footnote : null);
+    const fact = (label, num, unit, text) => h('div', { class: 'gate-fact' },
+      h('p', { class: 'gate-fact-label' }, label),
+      h('p', { class: 'gate-fact-num' }, num, h('span', null, unit)),
+      h('p', { class: 'gate-fact-text' }, text));
+    const sky = h('canvas', { class: 'gate-sky', 'aria-hidden': 'true' });
     const el = h('main', { class: 'gate', id: 'gate' },
-      h('div', { class: 'gate-sky', 'aria-hidden': 'true' }),
-      h('div', { class: 'gate-orbit', 'aria-hidden': 'true' }),
+      sky,
+      h('div', { class: 'gate-orbit', 'aria-hidden': 'true' }, h('span'), h('span')),
       h('div', { class: 'gate-intro' },
         h('p', { class: 'gate-eyebrow' }, 'Earth intelligence for everyone'),
-        h('p', { class: 'gate-claim' }, 'See the whole story of a changing planet.')),
+        h('p', { class: 'gate-claim' },
+          h('span', { class: 'gate-claim-1' }, 'See the whole ', h('em', { class: 'gate-serif' }, 'story')),
+          h('span', { class: 'gate-claim-2' }, 'of a changing planet.')),
+        h('div', { class: 'gate-facts' },
+          fact('Orbit', '705', 'km', 'Altitude of NASA\u2019s Terra satellite, home of the MODIS instrument ECHO draws on.'),
+          fact('Resolution', '250', 'm / pixel', 'Detail enough to follow a river as it changes course.'),
+          fact('Revisit', '1\u20132', 'days', 'Time for MODIS to image the entire planet.'))),
       card);
     root.append(el);
+    drawSky(sky);
+    const onResize = () => { if (!sky.isConnected) { removeEventListener('resize', onResize); return; } drawSky(sky); };
+    addEventListener('resize', onResize);
 
     function clearErrors() {
       for (const f of [name, email, password]) { f.err.textContent = ''; f.input.removeAttribute('aria-invalid'); f.input.removeAttribute('aria-describedby'); }
