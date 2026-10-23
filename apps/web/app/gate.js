@@ -1,4 +1,5 @@
-// The sign-in screen shown before the map. Two tabs, Sign up and Log in, on one form.
+// The sign-in screen shown before the map: a landing page (the ECHO website's opening scene)
+// whose two actions open one form with Sign up and Log in tabs.
 // Resolves with { user, isNew } once the person is in.
 
 import { h } from '../../../packages/ui/dom.js';
@@ -41,7 +42,7 @@ export function showGate(root, auth, { initialMode = 'signup', note = '' } = {})
     let mode = initialMode;
     let busy = false;
 
-    const title = h('h1', { class: 'gate-title', id: 'gate-title' });
+    const title = h('h2', { class: 'gate-title', id: 'gate-title' });
     const lead = h('p', { class: 'gate-lead' });
     const tabSignup = h('button', { type: 'button', role: 'tab', id: 'tab-signup', class: 'gate-tab', 'aria-controls': 'gate-form', onClick: () => setMode('signup') }, 'Sign up');
     const tabLogin = h('button', { type: 'button', role: 'tab', id: 'tab-login', class: 'gate-tab', 'aria-controls': 'gate-form', onClick: () => setMode('login') }, 'Log in');
@@ -71,31 +72,75 @@ export function showGate(root, auth, { initialMode = 'signup', note = '' } = {})
       name.wrap, email.wrap, password.wrap, formError, submit, swap);
 
     const footnote = h('p', { class: 'gate-foot' }, note);
+    const back = h('button', { type: 'button', class: 'gate-back', 'aria-label': 'Back', onClick: () => showLanding() }, svgIcon(['M19 12H5', 'm11 6-6 6 6 6'], 18), h('span', null, 'Back'));
     const card = h('section', { class: 'gate-card', 'aria-labelledby': 'gate-title' },
-      h('div', { class: 'gate-brand' }, h('img', { src: 'assets/icons/icon-192.png', alt: '', width: 40, height: 40 }), h('span', null, 'ECHO')),
+      h('div', { class: 'gate-card-top' },
+        h('div', { class: 'gate-brand' }, h('img', { src: 'assets/icons/icon-192.png', alt: '', width: 34, height: 34 }), h('span', null, 'ECHO')),
+        back),
       title, lead, tabs, form, note ? footnote : null);
-    const fact = (label, num, unit, text) => h('div', { class: 'gate-fact' },
-      h('p', { class: 'gate-fact-label' }, label),
-      h('p', { class: 'gate-fact-num' }, num, h('span', null, unit)),
-      h('p', { class: 'gate-fact-text' }, text));
+
+    // The landing: the website's opening scene, with sign-up and log-in as its two actions.
+    // Returning visitors (anyone who has signed in on this browser before) get Log in first.
+    const returning = initialMode === 'login';
+    const ctaSignup = h('button', { type: 'button', class: `btn ${returning ? 'btn-ghost-line' : 'btn-primary'} gate-cta-btn`, id: 'gate-cta-signup', onClick: () => showForm('signup', ctaSignup) }, 'Create account');
+    const ctaLogin = h('button', { type: 'button', class: `btn ${returning ? 'btn-primary' : 'btn-ghost-line'} gate-cta-btn`, id: 'gate-cta-login', onClick: () => showForm('login', ctaLogin) }, 'Log in');
+    const barLogin = h('button', { type: 'button', class: 'gate-bar-login', onClick: () => showForm('login', barLogin) }, 'Log in');
     const sky = h('canvas', { class: 'gate-sky', 'aria-hidden': 'true' });
-    const el = h('main', { class: 'gate', id: 'gate' },
+    const satellite = h('svg:g', null, h('svg:circle', { r: 16, fill: 'url(#gate-sat)' }), h('svg:circle', { r: 3.4, fill: '#e9fff4' }));
+    const orbitPath = h('svg:path', { d: 'M10,238 a490,228 0 1,0 980,0 a490,228 0 1,0 -980,0', fill: 'none' });
+    const orbit = h('div', { class: 'gate-orbit', 'aria-hidden': 'true' },
+      h('svg:svg', { viewBox: '0 0 1000 476' },
+        h('svg:defs', null,
+          h('svg:linearGradient', { id: 'gate-og', x1: '0', x2: '1' }, h('svg:stop', { offset: '0', 'stop-color': '#9af3c6', 'stop-opacity': '0' }), h('svg:stop', { offset: '.45', 'stop-color': '#9af3c6', 'stop-opacity': '.55' }), h('svg:stop', { offset: '1', 'stop-color': '#9af3c6', 'stop-opacity': '.08' })),
+          h('svg:radialGradient', { id: 'gate-sat' }, h('svg:stop', { offset: '0', 'stop-color': '#ffffff' }), h('svg:stop', { offset: '.35', 'stop-color': '#9af3c6' }), h('svg:stop', { offset: '1', 'stop-color': '#9af3c6', 'stop-opacity': '0' }))),
+        h('svg:ellipse', { cx: 500, cy: 238, rx: 490, ry: 228, fill: 'none', stroke: 'url(#gate-og)', 'stroke-width': 1.4 }),
+        orbitPath, satellite));
+    const hero = h('section', { class: 'gate-hero', 'aria-labelledby': 'gate-hero-title' },
+      h('p', { class: 'gate-eyebrow' }, h('span', { class: 'gate-dot', 'aria-hidden': 'true' }), 'Earth intelligence for everyone'),
+      h('h1', { class: 'gate-hero-title', id: 'gate-hero-title' }, 'See the whole ', h('em', { class: 'gate-serif' }, 'story.')),
+      h('p', { class: 'gate-lede' }, 'ECHO turns NASA satellite imagery and open event data into investigations anyone can run, with a clear line between evidence and interpretation.'),
+      h('div', { class: 'gate-cta' }, returning ? [ctaLogin, ctaSignup] : [ctaSignup, ctaLogin]));
+    const panel = h('div', { class: 'gate-panel' }, card);
+    const el = h('main', { class: 'gate', id: 'gate', dataset: { view: 'landing' } },
       sky,
-      h('div', { class: 'gate-orbit', 'aria-hidden': 'true' }, h('span'), h('span')),
-      h('div', { class: 'gate-intro' },
-        h('p', { class: 'gate-eyebrow' }, 'Earth intelligence for everyone'),
-        h('p', { class: 'gate-claim' },
-          h('span', { class: 'gate-claim-1' }, 'See the whole ', h('em', { class: 'gate-serif' }, 'story')),
-          h('span', { class: 'gate-claim-2' }, 'of a changing planet.')),
-        h('div', { class: 'gate-facts' },
-          fact('Orbit', '705', 'km', 'Altitude of NASA\u2019s Terra satellite, home of the MODIS instrument ECHO draws on.'),
-          fact('Resolution', '250', 'm / pixel', 'Detail enough to follow a river as it changes course.'),
-          fact('Revisit', '1\u20132', 'days', 'Time for MODIS to image the entire planet.'))),
-      card);
+      h('div', { class: 'gate-earth', 'aria-hidden': 'true' }, h('img', { src: 'assets/img/earth-hd.webp', alt: '', decoding: 'async', fetchpriority: 'high' })),
+      h('div', { class: 'gate-shade', 'aria-hidden': 'true' }),
+      orbit,
+      h('header', { class: 'gate-bar' },
+        h('div', { class: 'gate-brand' }, h('img', { src: 'assets/icons/icon-192.png', alt: '', width: 30, height: 30 }), h('span', null, 'ECHO')),
+        barLogin),
+      hero, panel);
     root.append(el);
     drawSky(sky);
     const onResize = () => { if (!sky.isConnected) { removeEventListener('resize', onResize); return; } drawSky(sky); };
     addEventListener('resize', onResize);
+
+    // The satellite travels the orbit, as on the website (still when reduced motion is on).
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const len = orbitPath.getTotalLength ? orbitPath.getTotalLength() : 0;
+    const place = (t) => { if (!len) return; const p = orbitPath.getPointAtLength(((t * 0.00004) % 1) * len); satellite.setAttribute('transform', `translate(${p.x} ${p.y})`); };
+    if (still) place(9000);
+    else { const loop = (t) => { if (!el.isConnected) return; place(t); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+
+    let opener = null;
+    function showForm(next, from) {
+      opener = from || null;
+      setMode(next);
+      el.dataset.view = 'form';
+      hero.inert = true;
+      el.querySelector('.gate-bar').inert = true;
+      panel.inert = false;
+      requestAnimationFrame(() => (mode === 'signup' ? name.input : email.input).focus({ preventScroll: true }));
+    }
+    function showLanding() {
+      el.dataset.view = 'landing';
+      panel.inert = true;
+      hero.inert = false;
+      el.querySelector('.gate-bar').inert = false;
+      clearErrors();
+      (opener && opener.isConnected ? opener : (returning ? ctaLogin : ctaSignup)).focus({ preventScroll: true });
+    }
+    el.addEventListener('keydown', (e) => { if (e.key === 'Escape' && el.dataset.view === 'form' && !busy) { e.preventDefault(); showLanding(); } });
 
     function clearErrors() {
       for (const f of [name, email, password]) { f.err.textContent = ''; f.input.removeAttribute('aria-invalid'); f.input.removeAttribute('aria-describedby'); }
@@ -160,7 +205,7 @@ export function showGate(root, auth, { initialMode = 'signup', note = '' } = {})
     }
 
     setMode(mode);
-    requestAnimationFrame(() => (mode === 'signup' ? name.input : email.input).focus({ preventScroll: true }));
+    panel.inert = true;
   });
 }
 
