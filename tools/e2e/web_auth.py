@@ -8,7 +8,14 @@ from playwright.async_api import async_playwright
 GATE = "#gate"
 OB = "dialog.onboarding[open]"
 
+async def open_form(page, which="signup"):
+    """From the landing, press Create account or Log in and wait for the form to rise."""
+    await page.click(f"#gate-cta-{which}")
+    await page.wait_for_selector("#gate[data-view='form'] .gate-panel", state="visible")
+    await page.wait_for_timeout(900)
+
 async def sign_up(page, name="Ada Lovelace", email="ada@example.com", password="orbit-705km"):
+    if await page.get_attribute("#gate", "data-view") == "landing": await open_form(page, "signup")
     await page.fill("#gate-name", name)
     await page.fill("#gate-email", email)
     await page.fill("#gate-password", password)
@@ -21,8 +28,27 @@ async def main():
         # ---- first visit: the sign-in screen comes before the map ----
         b, ctx, page = await open_web(p, port, log, problems, signed_in=False, wait_ready=False, hash="#inv=demo-nepal")
         await page.wait_for_selector(GATE)
-        check("A1 a first visit opens on Sign up, not the map", await page.is_visible("#gate-name") and await page.get_attribute("#tab-signup", "aria-selected") == "true" and not await page.evaluate("!!document.querySelector('#map')"))
-        check("A2 the screen says accounts stay in this browser (device mode)", "this browser only" in await page.inner_text(GATE))
+        await page.wait_for_timeout(300)
+        check("L1 a first visit opens on the landing page, not the map or a form", await page.is_visible(".gate-hero-title") and "See the whole story." in await page.inner_text(".gate-hero-title") and await page.is_hidden("#gate-name") and not await page.evaluate("!!document.querySelector('#map')"))
+        check("L2 the landing's only actions are Create account (first) and Log in", [t.strip() for t in await page.locator(".gate-cta button").all_inner_texts()] == ["Create account", "Log in"] and "btn-primary" in await page.get_attribute("#gate-cta-signup", "class"))
+        check("L3 the landing has the Earth image and the orbit", await page.evaluate("(() => { const i = document.querySelector('.gate-earth img'); return i.complete && i.naturalWidth >= 2000 && !!document.querySelector('.gate-orbit ellipse'); })()"))
+        await page.keyboard.press("Tab"); await page.keyboard.press("Tab")
+        check("L4 keyboard users reach Create account straight after the corner Log in", await page.evaluate("document.activeElement.id") == "gate-cta-signup")
+        await open_form(page, "signup")
+        await page.click(".gate-back")
+        await page.wait_for_timeout(1000)
+        check("L5 Back returns to the landing", await page.get_attribute(GATE, "data-view") == "landing" and await page.is_visible(".gate-hero-title") and await page.is_hidden(".gate-card"))
+        await open_form(page, "signup")
+        await page.keyboard.press("Escape")
+        await page.wait_for_timeout(700)
+        check("L6 Escape also returns to the landing", await page.get_attribute(GATE, "data-view") == "landing")
+        await page.click(".gate-bar-login")
+        await page.wait_for_timeout(1000)
+        check("L7 the Log in button in the corner opens the form on Log in", await page.get_attribute("#tab-login", "aria-selected") == "true" and await page.is_visible("#gate-email") and await page.is_hidden(".gate-hero-title"))
+        await page.click(".gate-back"); await page.wait_for_timeout(700)
+        await open_form(page, "signup")
+        check("A1 Create account opens the form on Sign up", await page.is_visible("#gate-name") and await page.get_attribute("#tab-signup", "aria-selected") == "true")
+        check("A2 the form says accounts stay in this browser (device mode)", "this browser only" in await page.inner_text(GATE))
         check("A3 the name field has focus", await page.evaluate("document.activeElement.id") == "gate-name")
 
         await page.click(".gate-submit")
@@ -86,7 +112,10 @@ async def main():
         check("A22 the account dialog shows who is signed in", "ada@example.com" in await page.inner_text("dialog[open]"))
         await page.click("dialog[open] .btn-primary:has-text('Log out')")
         await page.wait_for_selector(GATE, timeout=10000)
-        check("A23 logging out returns to the screen, on Log in this time", await page.get_attribute("#tab-login", "aria-selected") == "true" and await page.is_hidden("#gate-name"))
+        await page.wait_for_timeout(300)
+        check("A23 after logging out, the landing leads with Log in", [t.strip() for t in await page.locator(".gate-cta button").all_inner_texts()] == ["Log in", "Create account"] and "btn-primary" in await page.get_attribute("#gate-cta-login", "class"))
+        await open_form(page, "login")
+        check("A23b Log in opens the form on Log in", await page.get_attribute("#tab-login", "aria-selected") == "true" and await page.is_hidden("#gate-name"))
         await page.fill("#gate-email", "ada@example.com")
         await page.fill("#gate-password", "wrong-password")
         await page.click(".gate-submit")
@@ -103,7 +132,7 @@ async def main():
         await page.click("#account-button")
         await page.click("dialog[open] .btn-primary:has-text('Log out')")
         await page.wait_for_selector(GATE, timeout=10000)
-        await page.click("#tab-signup")
+        await page.wait_for_timeout(300)
         await sign_up(page, name="Someone Else")
         await page.wait_for_selector("#gate-email-error:not(:empty)")
         check("A26 an email can only be used once", "already exists" in await page.inner_text("#gate-email-error"))
@@ -128,7 +157,13 @@ async def main():
         # ---- phone ----
         b, ctx, page = await open_web(p, port, log, problems, w=390, h=844, mobile=True, scale=2, signed_in=False, wait_ready=False)
         await page.wait_for_selector(GATE)
-        check("A30 the phone screen has no sideways scroll", await page.evaluate("document.querySelector('#gate').scrollWidth <= innerWidth"))
+        await page.wait_for_timeout(400)
+        check("A30 the phone screen has no sideways scroll", await page.evaluate("document.documentElement.scrollWidth <= innerWidth && getComputedStyle(document.querySelector('#gate')).overflowX === 'clip'"))
+        cta = await rect(page, "#gate-cta-signup")
+        title = await rect(page, ".gate-hero-title")
+        check("A30b on phones the headline and buttons fit and sit on screen", title["x"] >= 0 and title["r"] <= 390 and cta["b"] <= 844 and cta["w"] >= 280, (title, cta))
+        await page.screenshot(path="auth-landing-phone.png")
+        await open_form(page, "signup")
         card = await rect(page, ".gate-card")
         check("A31 the form fits the phone width", card["x"] >= 0 and card["r"] <= 390, card)
         check("A32 inputs are 16px so iOS does not zoom", await page.evaluate("getComputedStyle(document.querySelector('#gate-email')).fontSize") == "16px")
@@ -151,7 +186,9 @@ async def main():
         # ---- desktop screenshot of the sign-in screen ----
         b, ctx, page = await open_web(p, port, log, problems, signed_in=False, wait_ready=False)
         await page.wait_for_selector(GATE)
-        await page.wait_for_timeout(300)
+        await page.wait_for_timeout(400)
+        await page.screenshot(path="auth-landing-desktop.png")
+        await open_form(page, "signup")
         await page.screenshot(path="auth-gate-desktop.png")
         await b.close()
 
