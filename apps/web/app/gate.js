@@ -1,5 +1,5 @@
-// The sign-in screen shown before the map: a landing page (the ECHO website's opening scene)
-// whose two actions open one form with Sign up and Log in tabs.
+// The sign-in screen shown before the map: a framed window onto the ECHO website's opening
+// scene beside one form with Sign up and Log in tabs.
 // Resolves with { user, isNew } once the person is in.
 
 import { h } from '../../../packages/ui/dom.js';
@@ -72,19 +72,11 @@ export function showGate(root, auth, { initialMode = 'signup', note = '' } = {})
       name.wrap, email.wrap, password.wrap, formError, submit, swap);
 
     const footnote = h('p', { class: 'gate-foot' }, note);
-    const back = h('button', { type: 'button', class: 'gate-back', 'aria-label': 'Back', onClick: () => showLanding() }, svgIcon(['M19 12H5', 'm11 6-6 6 6 6'], 18), h('span', null, 'Back'));
     const card = h('section', { class: 'gate-card', 'aria-labelledby': 'gate-title' },
-      h('div', { class: 'gate-card-top' },
-        h('div', { class: 'gate-brand' }, h('img', { src: 'assets/icons/icon-192.png', alt: '', width: 34, height: 34 }), h('span', null, 'ECHO')),
-        back),
+      h('div', { class: 'gate-brand' }, h('img', { src: 'assets/icons/icon-192.png', alt: '', width: 34, height: 34 }), h('span', null, 'ECHO')),
       title, lead, tabs, form, note ? footnote : null);
 
-    // The landing: the website's opening scene, with sign-up and log-in as its two actions.
-    // Returning visitors (anyone who has signed in on this browser before) get Log in first.
-    const returning = initialMode === 'login';
-    const ctaSignup = h('button', { type: 'button', class: `btn ${returning ? 'btn-ghost-line' : 'btn-primary'} gate-cta-btn`, id: 'gate-cta-signup', onClick: () => showForm('signup', ctaSignup) }, 'Create account');
-    const ctaLogin = h('button', { type: 'button', class: `btn ${returning ? 'btn-primary' : 'btn-ghost-line'} gate-cta-btn`, id: 'gate-cta-login', onClick: () => showForm('login', ctaLogin) }, 'Log in');
-    const barLogin = h('button', { type: 'button', class: 'gate-bar-login', onClick: () => showForm('login', barLogin) }, 'Log in');
+    // Left: a framed window onto the ECHO website's opening scene. Right: the form, ready to use.
     const sky = h('canvas', { class: 'gate-sky', 'aria-hidden': 'true' });
     const satellite = h('svg:g', null, h('svg:circle', { r: 16, fill: 'url(#gate-sat)' }), h('svg:circle', { r: 3.4, fill: '#e9fff4' }));
     const orbitPath = h('svg:path', { d: 'M10,238 a490,228 0 1,0 980,0 a490,228 0 1,0 -980,0', fill: 'none' });
@@ -95,21 +87,16 @@ export function showGate(root, auth, { initialMode = 'signup', note = '' } = {})
           h('svg:radialGradient', { id: 'gate-sat' }, h('svg:stop', { offset: '0', 'stop-color': '#ffffff' }), h('svg:stop', { offset: '.35', 'stop-color': '#9af3c6' }), h('svg:stop', { offset: '1', 'stop-color': '#9af3c6', 'stop-opacity': '0' }))),
         h('svg:ellipse', { cx: 500, cy: 238, rx: 490, ry: 228, fill: 'none', stroke: 'url(#gate-og)', 'stroke-width': 1.4 }),
         orbitPath, satellite));
-    const hero = h('section', { class: 'gate-hero', 'aria-labelledby': 'gate-hero-title' },
-      h('p', { class: 'gate-eyebrow' }, h('span', { class: 'gate-dot', 'aria-hidden': 'true' }), 'Earth intelligence for everyone'),
-      h('h1', { class: 'gate-hero-title', id: 'gate-hero-title' }, 'See the whole ', h('em', { class: 'gate-serif' }, 'story.')),
-      h('p', { class: 'gate-lede' }, 'ECHO turns NASA satellite imagery and open event data into investigations anyone can run, with a clear line between evidence and interpretation.'),
-      h('div', { class: 'gate-cta' }, returning ? [ctaLogin, ctaSignup] : [ctaSignup, ctaLogin]));
-    const panel = h('div', { class: 'gate-panel' }, card);
-    const el = h('main', { class: 'gate', id: 'gate', dataset: { view: 'landing' } },
-      sky,
+    const stage = h('section', { class: 'gate-stage', 'aria-labelledby': 'gate-hero-title' },
       h('div', { class: 'gate-earth', 'aria-hidden': 'true' }, h('img', { src: 'assets/img/earth-hd.webp', alt: '', decoding: 'async', fetchpriority: 'high' })),
       h('div', { class: 'gate-shade', 'aria-hidden': 'true' }),
       orbit,
-      h('header', { class: 'gate-bar' },
-        h('div', { class: 'gate-brand' }, h('img', { src: 'assets/icons/icon-192.png', alt: '', width: 30, height: 30 }), h('span', null, 'ECHO')),
-        barLogin),
-      hero, panel);
+      h('div', { class: 'gate-hero' },
+        h('p', { class: 'gate-eyebrow' }, h('span', { class: 'gate-dot', 'aria-hidden': 'true' }), 'Earth intelligence for everyone'),
+        h('h1', { class: 'gate-hero-title', id: 'gate-hero-title' }, 'See the whole ', h('em', { class: 'gate-serif' }, 'story.')),
+        h('p', { class: 'gate-lede' }, 'ECHO turns NASA satellite imagery and open event data into investigations anyone can run, with a clear line between evidence and interpretation.')),
+      h('p', { class: 'gate-credit', 'aria-hidden': 'true' }, h('span', null, 'NASA EONET'), h('span', null, 'MODIS'), h('span', null, 'VIIRS')));
+    const el = h('main', { class: 'gate', id: 'gate' }, sky, stage, h('div', { class: 'gate-side' }, card));
     root.append(el);
     drawSky(sky);
     const onResize = () => { if (!sky.isConnected) { removeEventListener('resize', onResize); return; } drawSky(sky); };
@@ -121,26 +108,6 @@ export function showGate(root, auth, { initialMode = 'signup', note = '' } = {})
     const place = (t) => { if (!len) return; const p = orbitPath.getPointAtLength(((t * 0.00004) % 1) * len); satellite.setAttribute('transform', `translate(${p.x} ${p.y})`); };
     if (still) place(9000);
     else { const loop = (t) => { if (!el.isConnected) return; place(t); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
-
-    let opener = null;
-    function showForm(next, from) {
-      opener = from || null;
-      setMode(next);
-      el.dataset.view = 'form';
-      hero.inert = true;
-      el.querySelector('.gate-bar').inert = true;
-      panel.inert = false;
-      requestAnimationFrame(() => (mode === 'signup' ? name.input : email.input).focus({ preventScroll: true }));
-    }
-    function showLanding() {
-      el.dataset.view = 'landing';
-      panel.inert = true;
-      hero.inert = false;
-      el.querySelector('.gate-bar').inert = false;
-      clearErrors();
-      (opener && opener.isConnected ? opener : (returning ? ctaLogin : ctaSignup)).focus({ preventScroll: true });
-    }
-    el.addEventListener('keydown', (e) => { if (e.key === 'Escape' && el.dataset.view === 'form' && !busy) { e.preventDefault(); showLanding(); } });
 
     function clearErrors() {
       for (const f of [name, email, password]) { f.err.textContent = ''; f.input.removeAttribute('aria-invalid'); f.input.removeAttribute('aria-describedby'); }
@@ -205,7 +172,9 @@ export function showGate(root, auth, { initialMode = 'signup', note = '' } = {})
     }
 
     setMode(mode);
-    panel.inert = true;
+    // Put the cursor in the first field, except on touch screens where it would pop the keyboard
+    // up over the scene before the person has chosen to start.
+    if (matchMedia('(pointer: fine)').matches) requestAnimationFrame(() => (mode === 'signup' ? name.input : email.input).focus({ preventScroll: true }));
   });
 }
 
