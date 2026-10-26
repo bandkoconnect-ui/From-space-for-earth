@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ECHO Earth Intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#03060c">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ECHO: Earth intelligence for everyone">
+<meta property="og:description" content="ECHO turns NASA satellite imagery and open event data into investigations anyone can run, with a clear line between evidence and interpretation.">
+<meta property="og:image" content="https://bandkoconnect-ui.github.io/From-space-for-earth/website/img/og.jpg">
+<meta property="og:url" content="https://bandkoconnect-ui.github.io/From-space-for-earth/website/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+<meta name="description" content="ECHO turns NASA satellite imagery and open event data into investigations anyone can run.">
+<style>
+@font-face { font-family: 'ECHO Display'; src: url('../assets/fonts/inter-display-light.woff') format('woff'); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: 'ECHO Serif'; src: url('../assets/fonts/liberation-serif-italic.woff') format('woff'); font-weight: 400; font-style: italic; font-display: swap; }
+/* Layout: one scroll that descends from orbit to the ground. Fixed star field behind everything, full-bleed parallax bands, one sticky descent sequence. Dark-only, matching the app. */
+:root {
+  --space: #03060c;
+  --bg: #0b1118;
+  --panel: rgba(13, 18, 26, 0.8);
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --ink: #eef2f6;
+  --ink-2: #b2bcc6;
+  --ink-3: #7f8b96;
+  --lichen: #9af3c6;
+  --lichen-ink: #06261a;
+  --lichen-dim: rgba(154, 243, 198, 0.12);
+  --amber: #f2c27b;
+  --amber-dim: rgba(242, 194, 123, 0.13);
+  --flare: #ff453a;
+  --sky: #8ec5ff;
+  --display: Inter, 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --light: 'ECHO Display', 'Inter Display', Inter, 'SF Pro Display', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --serif: 'ECHO Serif', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --mono: 'SF Mono', ui-monospace, 'Cascadia Mono', Menlo, Consolas, 'Roboto Mono', monospace;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --gut: max(24px, env(safe-area-inset-left, 0px));
+  --gut-r: max(24px, env(safe-area-inset-right, 0px));
+  --sec: clamp(96px, 11vw, 160px);
+  color-scheme: dark;
+}
+@media (min-width: 900px) { :root { --gut: max(48px, env(safe-area-inset-left, 0px)); --gut-r: max(48px, env(safe-area-inset-right, 0px)); } }
+@media (max-width: 420px) { :root { --gut: max(16px, env(safe-area-inset-left, 0px)); --gut-r: max(16px, env(safe-area-inset-right, 0px)); } }
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--space); color: var(--ink); font: 400 17px/1.6 var(--display); -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--space); }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+:focus-visible { outline: 2px solid var(--lichen); outline-offset: 3px; border-radius: 4px; }
+h1, h2, h3, h4 { margin: 0; font-weight: 300; text-wrap: balance; letter-spacing: -0.02em; }
+p { margin: 0; text-wrap: pretty; }
+em.s { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0; color: var(--lichen); }
+
+.wrap { width: 100%; max-width: calc(1200px + 96px); margin: 0 auto; padding-left: var(--gut); padding-right: var(--gut-r); }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; font: 500 11.5px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--lichen); }
+.eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lichen); box-shadow: 0 0 10px rgba(154, 243, 198, 0.7); }
+
+.btn { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 22px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(255, 255, 255, 0.04); color: var(--ink); font: 500 15px var(--display); text-decoration: none; transition: background .2s, border-color .2s, transform .2s var(--ease); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.btn:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255, 255, 255, 0.3); }
+.btn-primary { background: var(--lichen); color: var(--lichen-ink); border-color: transparent; font-weight: 600; box-shadow: 0 10px 40px rgba(154, 243, 198, 0.18); }
+.btn-primary:hover { background: #b2f7d4; transform: translateY(-1px); }
+.btn svg { width: 16px; height: 16px; }
+
+#stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+main, footer { position: relative; z-index: 1; }
+
+/* ---------- nav ---------- */
+.nav { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 50; border-bottom: 1px solid transparent; transition: background .3s, border-color .3s; }
+.nav.solid { background: rgba(3, 6, 12, 0.74); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); border-bottom-color: var(--line); }
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 68px; }
+.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font: 600 15px var(--display); letter-spacing: 0.28em; }
+.brand svg { width: 30px; height: 30px; }
+.nav ul { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.nav ul a { display: block; padding: 8px 14px; border-radius: 999px; text-decoration: none; color: var(--ink-2); font-size: 14px; transition: color .2s, background .2s; }
+.nav ul a:hover { color: var(--ink); background: rgba(255, 255, 255, 0.06); }
+.nav .btn { min-height: 38px; padding: 0 16px; font-size: 14px; }
+@media (max-width: 860px) { .nav ul { display: none; } }
+
+/* ---------- hero ---------- */
+.hero { position: relative; min-height: max(680px, 100svh); display: grid; align-items: center; overflow: clip; isolation: isolate; }
+.hero .earth { position: absolute; left: 50%; bottom: -30%; width: max(1500px, 120vw); transform: translateX(-50%); z-index: -2; will-change: transform; }
+.hero .earth img { width: 100%; max-width: none; mask-image: linear-gradient(to bottom, transparent 8%, #000 36%); -webkit-mask-image: linear-gradient(to bottom, transparent 8%, #000 36%); }
+.hero .shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(70% 55% at 50% 46%, rgba(3,6,12,.72), rgba(3,6,12,0) 70%), linear-gradient(to bottom, rgba(3,6,12,0) 62%, var(--space) 100%); }
+.orbit { position: absolute; left: 50%; top: 47%; width: min(1180px, 150vw); aspect-ratio: 2.1; transform: translate(-50%, -50%) rotate(-14deg); z-index: -1; pointer-events: none; will-change: transform; }
+.orbit svg { width: 100%; height: 100%; overflow: visible; }
+.hero-copy { text-align: center; padding-block: 130px 170px; display: grid; justify-items: center; gap: 26px; }
+.hero h1 { font-size: clamp(54px, 10vw, 144px); line-height: 0.95; letter-spacing: -0.045em; }
+.hero .lede { max-width: 32em; color: var(--ink-2); font-size: clamp(17px, 1.5vw, 19px); }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.scroll-cue { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); display: grid; justify-items: center; gap: 10px; font: 500 11px var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+.scroll-cue i { display: block; width: 1px; height: 40px; background: linear-gradient(var(--lichen), transparent); animation: drip 2.4s var(--ease) infinite; transform-origin: top; }
+@keyframes drip { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------- question ---------- */
+.question { padding-block: var(--sec) calc(var(--sec) * 0.7); }
+.q-lines { display: grid; gap: 0.12em; font-size: clamp(36px, 6.2vw, 92px); line-height: 1.04; letter-spacing: -0.035em; }
+.q-lines span { display: block; will-change: transform; }
+.q-lines .q1 { color: var(--ink-3); }
+.facts { margin-top: clamp(56px, 7vw, 96px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.fact { padding: 28px 28px 4px 0; display: grid; gap: 10px; align-content: start; }
+.fact + .fact { padding-left: 28px; border-left: 1px solid var(--line); }
+.fact .lbl { font: 500 11px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--lichen); }
+.fact .num { font: 300 clamp(44px, 5vw, 66px)/1 var(--display); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.fact .num small { font-size: 0.4em; letter-spacing: 0; color: var(--ink-3); margin-left: 6px; }
+.fact p { color: var(--ink-2); font-size: 15.5px; max-width: 24em; }
+@media (max-width: 760px) { .facts { grid-template-columns: 1fr; } .fact, .fact + .fact { padding: 24px 0; border-left: 0; border-bottom: 1px solid var(--line); } }
+
+/* ---------- mission ---------- */
+.mission { padding-block: calc(var(--sec) * 0.6) var(--sec); overflow: clip; }
+.mission .grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: clamp(32px, 6vw, 96px); align-items: center; }
+.mission h2 { font-size: clamp(32px, 4.2vw, 58px); line-height: 1.08; margin-top: 22px; }
+.mission .body { margin-top: 26px; display: grid; gap: 16px; color: var(--ink-2); max-width: 32em; }
+.figwrap { position: relative; }
+.frame { position: relative; margin: 0; border-radius: 22px; overflow: hidden; aspect-ratio: 4 / 5; max-width: 100%; border: 1px solid var(--line); background: var(--bg); }
+.frame img { position: absolute; left: 0; top: -12%; width: 100%; height: 124%; object-fit: cover; will-change: transform; }
+.frame figcaption { position: absolute; inset: auto 18px 16px; display: flex; justify-content: space-between; gap: 12px; font: 500 10.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: rgba(238,242,246,.85); text-shadow: 0 1px 8px rgba(0,0,0,.6); }
+.ring { position: absolute; right: -12%; top: -14%; width: 70%; aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(154, 243, 198, 0.16); pointer-events: none; will-change: transform; }
+.ring::after { content: ""; position: absolute; inset: 14%; border-radius: 50%; border: 1px dashed rgba(154, 243, 198, 0.12); }
+@media (max-width: 860px) { .mission .grid { grid-template-columns: 1fr; } .frame { aspect-ratio: 4 / 3; } }
+
+/* ---------- descent ---------- */
+.descent { position: relative; height: 340vh; }
+.stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; background: var(--space); }
+.layer { position: absolute; inset: 0; will-change: opacity; }
+.layer > img { width: 100%; height: 100%; object-fit: cover; max-width: none; will-change: transform; transform-origin: 50% 65%; }
+.box { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+.box img { width: 100%; height: 100%; max-width: none; }
+.box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.aoi path { fill: rgba(79, 189, 237, 0.18); stroke: #9ee3ff; stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.aoi circle { fill: #e9fff4; stroke: rgba(154,243,198,.8); stroke-width: 6; }
+.stage .tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(3,6,12,.94) 0%, rgba(3,6,12,.66) 24%, rgba(3,6,12,0) 54%), linear-gradient(to bottom, rgba(3,6,12,.6), rgba(3,6,12,0) 24%); }
+.pins i { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--flare); animation: pin 2.6s ease-out infinite; }
+.pins i:nth-child(2n) { animation-delay: .8s; } .pins i:nth-child(3n) { animation-delay: 1.5s; }
+@keyframes pin { 0% { box-shadow: 0 0 0 0 rgba(255,69,58,.55); } 70% { box-shadow: 0 0 0 18px rgba(255,69,58,0); } 100% { box-shadow: 0 0 0 0 rgba(255,69,58,0); } }
+.reticle { position: absolute; left: 0; top: 0; width: 180px; height: 180px; margin: -90px 0 0 -90px; pointer-events: none; will-change: transform, opacity; }
+.reticle svg { width: 100%; height: 100%; overflow: visible; }
+.aoi-label { position: absolute; left: 0; top: 0; pointer-events: none; display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; background: rgba(3,6,12,.72); border: 1px solid rgba(158,227,255,.35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font: 500 10.5px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #cdeffd; white-space: nowrap; opacity: 0; will-change: transform, opacity; }
+.aoi-label span { color: var(--ink-3); }
+.hud { position: absolute; left: 0; right: 0; top: calc(88px + env(safe-area-inset-top, 0px)); pointer-events: none; }
+.hud .wrap { display: flex; justify-content: space-between; gap: 16px; font: 500 11px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
+.hud b { color: var(--lichen); font-weight: 500; font-variant-numeric: tabular-nums; }
+.steps { position: absolute; left: 0; right: 0; bottom: max(44px, calc(env(safe-area-inset-bottom, 0px) + 28px)); }
+.steps .wrap { display: grid; }
+.step { grid-area: 1 / 1; align-self: end; max-width: 520px; opacity: 0; transform: translateY(10px); transition: opacity .18s linear, transform .3s var(--ease); pointer-events: none; }
+.step.on { opacity: 1; transform: none; transition: opacity .5s var(--ease) .14s, transform .65s var(--ease) .14s; }
+.step .k { font: 500 11.5px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--lichen); display: flex; gap: 12px; }
+.step .k span { color: var(--ink-3); }
+.step h3 { font-size: clamp(30px, 4.2vw, 54px); line-height: 1.04; margin-top: 12px; text-shadow: 0 2px 24px rgba(0,0,0,.6); }
+.step p { margin-top: 12px; color: var(--ink-2); font-size: 16.5px; max-width: 28em; }
+.rail { position: absolute; right: var(--gut-r); top: 50%; transform: translateY(-50%); display: grid; gap: 12px; }
+.rail i { display: block; width: 2px; height: 32px; border-radius: 2px; background: rgba(255,255,255,.16); position: relative; overflow: hidden; }
+.rail i::after { content: ""; position: absolute; inset: 0; background: var(--lichen); transform: scaleY(var(--f, 0)); transform-origin: top; }
+@media (max-width: 640px) { .rail { display: none; } .reticle { width: 130px; height: 130px; margin: -65px 0 0 -65px; } }
+
+/* ---------- features ---------- */
+.features { padding-block: var(--sec) calc(var(--sec) * 0.5); overflow: clip; }
+.sec-head { display: grid; gap: 18px; max-width: 760px; }
+.sec-head h2 { font-size: clamp(38px, 5.2vw, 72px); line-height: 1.02; }
+.sec-head p { color: var(--ink-2); max-width: 34em; }
+.feature { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(32px, 6vw, 96px); align-items: center; margin-top: clamp(72px, 9vw, 120px); }
+.feature.flip { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); }
+.feature.flip .copy { order: 2; }
+.copy { display: grid; gap: 16px; align-content: start; }
+.feature h3 { font-size: clamp(30px, 3.4vw, 46px); line-height: 1.06; }
+.copy p { color: var(--ink-2); max-width: 30em; }
+.ticks { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 10px; }
+.ticks li { display: flex; gap: 12px; color: var(--ink-2); font-size: 15.5px; }
+.ticks li::before { content: ""; flex: none; width: 14px; height: 1px; margin-top: 0.8em; background: var(--lichen); }
+@media (max-width: 860px) { .feature, .feature.flip { grid-template-columns: 1fr; } .feature.flip .copy { order: 0; } }
+.viz { position: relative; padding: clamp(28px, 4vw, 48px) clamp(16px, 4vw, 48px); display: grid; place-items: center; isolation: isolate; }
+.viz .bg { position: absolute; inset: 0; border-radius: 26px; overflow: hidden; z-index: -1; border: 1px solid var(--line); }
+.viz .bg img { position: absolute; left: 0; top: -10%; width: 100%; height: 120%; object-fit: cover; opacity: .6; max-width: none; will-change: transform; }
+.viz .bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(3,6,12,.15), rgba(3,6,12,.7)); }
+.panel { width: min(420px, 100%); border-radius: 18px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 30px 80px rgba(0,0,0,.55); backdrop-filter: blur(20px) saturate(1.3); -webkit-backdrop-filter: blur(20px) saturate(1.3); padding: 20px; font-size: 13.5px; line-height: 1.45; }
+.ph { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.ph strong { font-size: 15px; font-weight: 600; }
+.live { display: inline-flex; align-items: center; gap: 7px; font: 500 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--flare); box-shadow: 0 0 8px rgba(255,69,58,.8); }
+.live.m::before { background: var(--lichen); box-shadow: 0 0 8px rgba(154,243,198,.8); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.chip { display: inline-flex; align-items: center; min-height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.05); color: var(--ink-2); font-size: 12px; }
+.chip.on { background: var(--ink); color: #0b1016; border-color: var(--ink); }
+.ev { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ev:last-child { border-bottom: 0; padding-bottom: 2px; }
+.ev .pin { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; background: var(--flare); box-shadow: 0 0 0 4px rgba(255,69,58,.14); }
+.ev .pin.storm { background: var(--sky); box-shadow: 0 0 0 4px rgba(142,197,255,.14); }
+.ev small { display: block; font: 500 9.5px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.ev b { display: block; font-weight: 500; margin-top: 2px; overflow-wrap: anywhere; }
+.rule { height: 1px; background: var(--line); margin: 14px 0; }
+.lab { font: 500 9.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); display: flex; justify-content: space-between; }
+.tag { justify-self: start; display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; font: 500 9.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.tag.ok { background: var(--lichen-dim); color: var(--lichen); }
+.tag.in { background: var(--amber-dim); color: var(--amber); }
+.tag.no { border: 1px dashed rgba(255,255,255,.22); color: var(--ink-3); }
+.claim { display: grid; gap: 6px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.claim:last-of-type { border-bottom: 0; }
+.claim p { color: var(--ink-2); }
+.src { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 12px; align-items: center; padding: 7px 0; }
+.src .badge { min-width: 38px; height: 28px; display: grid; place-items: center; padding: 0 6px; border-radius: 8px; background: #243445; color: #b7d5ff; font: 500 10px var(--mono); }
+.src b { font-weight: 500; display: block; }
+.src small { color: var(--ink-3); font-size: 11.5px; }
+.compare { position: relative; margin-top: 14px; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; max-width: 100%; }
+.compare img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%; }
+.compare .half { position: absolute; inset: 0 50% 0 0; overflow: hidden; border-right: 2px solid var(--ink); }
+.compare .half img { width: 200%; max-width: none; filter: saturate(.5) brightness(.75); }
+.compare .knob { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; color: #0b1016; font: 600 11px var(--mono); box-shadow: 0 4px 16px rgba(0,0,0,.5); }
+.compare .lb { position: absolute; top: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(3,6,12,.72); font: 500 9.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+.days { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; margin-top: 14px; align-items: end; }
+.days i { display: block; height: 14px; border-radius: 2px; background: rgba(255,255,255,.12); }
+.days i.win { background: rgba(154,243,198,.35); }
+.days i.mark { height: 22px; background: var(--lichen); }
+.days-l { display: flex; justify-content: space-between; margin-top: 8px; font: 500 10px var(--mono); color: var(--ink-3); letter-spacing: .06em; }
+.lr { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 0; }
+.lr small { display: block; color: var(--ink-3); font-size: 11.5px; }
+.sw { flex: none; width: 34px; height: 20px; border-radius: 20px; background: #35414a; position: relative; }
+.sw::after { content: ""; position: absolute; width: 14px; height: 14px; top: 3px; left: 3px; border-radius: 50%; background: #9ba7b0; }
+.sw.on { background: #3e8268; } .sw.on::after { left: 17px; background: #d5ffeb; }
+
+.caps { margin-top: clamp(80px, 10vw, 130px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+.cap { background: rgba(3, 6, 12, 0.92); padding: 30px 28px; display: grid; gap: 12px; align-content: start; }
+.cap .ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: rgba(154,243,198,.08); border: 1px solid rgba(154,243,198,.2); color: var(--lichen); }
+.cap .ic svg { width: 18px; height: 18px; }
+.cap h4 { margin-top: 6px; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+.cap p { color: var(--ink-2); font-size: 15px; }
+@media (max-width: 900px) { .caps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .caps { grid-template-columns: 1fr; } }
+
+/* ---------- evidence ---------- */
+.evidence { position: relative; padding-block: var(--sec); overflow: clip; isolation: isolate; }
+.evidence .bgimg { position: absolute; inset: -18% 0; z-index: -1; will-change: transform; }
+.evidence .bgimg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%; opacity: .4; max-width: none; }
+.evidence .bgimg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(var(--space), rgba(3,6,12,.6) 28%, rgba(3,6,12,.6) 72%, var(--space)); }
+.trio { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 22px); }
+.trio article { border-radius: 20px; padding: 28px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: grid; gap: 14px; align-content: start; }
+.trio h3 { font-size: clamp(24px, 2.4vw, 32px); line-height: 1.1; }
+.trio p { color: var(--ink-2); font-size: 15.5px; }
+.trio .ex { font: 400 12.5px/1.5 var(--mono); color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 14px; }
+@media (max-width: 860px) { .trio { grid-template-columns: 1fr; } }
+.disclaim { margin-top: 36px; max-width: 48em; color: var(--ink-3); font-size: 14.5px; }
+
+/* ---------- vision ---------- */
+.vision { position: relative; min-height: max(640px, 92vh); display: grid; align-items: center; overflow: clip; isolation: isolate; padding-block: var(--sec); }
+.vision .v-bg { position: absolute; inset: -22% 0; z-index: -3; will-change: transform; }
+.vision .v-bg img { width: 100%; height: 100%; object-fit: cover; max-width: none; }
+.vision .v-fade { position: absolute; inset: 0; z-index: -2; background: linear-gradient(var(--space) 0%, rgba(3,6,12,.45) 28%, rgba(3,6,12,.6) 70%, var(--space) 100%); }
+.v-orbit { position: absolute; left: 50%; top: 50%; width: min(1100px, 140vw); aspect-ratio: 1; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; will-change: transform; }
+.v-orbit svg { width: 100%; height: 100%; }
+.vision .inner { text-align: center; display: grid; justify-items: center; gap: 24px; }
+.vision h2 { font-size: clamp(40px, 6.2vw, 92px); line-height: 1.02; letter-spacing: -0.04em; max-width: 12em; }
+.vision .sub { max-width: 32em; color: var(--ink); font-size: clamp(17px, 1.5vw, 19px); text-shadow: 0 1px 20px rgba(0,0,0,.7); }
+.platforms { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.platforms span { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(3,6,12,.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font: 500 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.platforms .now { color: var(--lichen); border-color: rgba(154,243,198,.4); }
+.platforms .now::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--lichen); box-shadow: 0 0 8px var(--lichen); }
+.sign { font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--lichen); margin-top: 8px; }
+
+footer { border-top: 1px solid var(--line); background: var(--space); padding-block: 52px max(44px, calc(env(safe-area-inset-bottom, 0px) + 28px)); }
+footer .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+footer p { color: var(--ink-3); font-size: 13.5px; }
+footer .credits { display: grid; gap: 8px; }
+footer .credits p { font: 400 12px/1.6 var(--mono); }
+@media (max-width: 760px) { footer .wrap { grid-template-columns: 1fr; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue i, .pins i { animation: none; }
+  [data-speed] { transform: none !important; }
+}
+/* large light type uses the bundled display face */
+h1, h2, h3, .q-lines, .fact .num { font-family: var(--light); }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="ECHO, back to top">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="bg1" r=".5"><stop offset="0" stop-color="#9af3c6" stop-opacity=".45"/><stop offset="1" stop-color="#9af3c6" stop-opacity="0"/></radialGradient></defs><circle cx="32" cy="32" r="22" fill="url(#bg1)"/><g transform="rotate(-24 32 32)"><ellipse cx="32" cy="32" rx="22" ry="11.5" fill="none" stroke="#9af3c6" stroke-width="2.4"/><circle cx="51" cy="27.6" r="2.6" fill="#e9fff4"/></g><circle cx="32" cy="32" r="8" fill="#9af3c6"/></svg>
+      ECHO
+    </a>
+    <nav aria-label="Sections">
+      <ul>
+        <li><a href="#mission">Mission</a></li>
+        <li><a href="#descent">Descent</a></li>
+        <li><a href="#features">Platform</a></li>
+        <li><a href="#evidence">Principle</a></li>
+        <li><a href="#vision">Vision</a></li>
+      </ul>
+    </nav>
+    <a class="btn" href="https://bandkoconnect-ui.github.io/From-space-for-earth/" target="_blank" rel="noopener">Open ECHO
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg></a>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="top">
+    <div class="earth" data-speed="-0.25" data-mode="earth"><img src="img/earth.webp" alt="Earth at night from orbit, with city lights across a continent" fetchpriority="high"></div>
+    <div class="orbit" data-speed="0.12" data-mode="orbit">
+      <svg viewBox="0 0 1000 476" aria-hidden="true">
+        <defs>
+          <linearGradient id="og" x1="0" x2="1"><stop offset="0" stop-color="#9af3c6" stop-opacity="0"/><stop offset=".45" stop-color="#9af3c6" stop-opacity=".55"/><stop offset="1" stop-color="#9af3c6" stop-opacity=".08"/></linearGradient>
+          <radialGradient id="sat"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#9af3c6"/><stop offset="1" stop-color="#9af3c6" stop-opacity="0"/></radialGradient>
+        </defs>
+        <ellipse cx="500" cy="238" rx="490" ry="228" fill="none" stroke="url(#og)" stroke-width="1.4"/>
+        <ellipse cx="500" cy="238" rx="430" ry="196" fill="none" stroke="#9af3c6" stroke-opacity=".08" stroke-dasharray="2 9"/>
+        <path id="orbitpath" d="M10,238 a490,228 0 1,0 980,0 a490,228 0 1,0 -980,0" fill="none"/>
+        <g id="satg"><circle r="16" fill="url(#sat)"/><circle r="3.4" fill="#e9fff4"/></g>
+      </svg>
+    </div>
+    <div class="shade"></div>
+    <div class="wrap hero-copy">
+      <span class="eyebrow"><span class="dot"></span>Earth intelligence for everyone</span>
+      <h1>See the whole <em class="s">story.</em></h1>
+      <p class="lede">ECHO turns NASA satellite imagery and open event data into investigations anyone can run, with a clear line between evidence and interpretation.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://bandkoconnect-ui.github.io/From-space-for-earth/" target="_blank" rel="noopener">Open ECHO
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg></a>
+        <a class="btn" href="#descent">See how it works</a>
+      </div>
+    </div>
+    <div class="scroll-cue" aria-hidden="true">Scroll<i></i></div>
+  </section>
+
+  <section class="question" aria-labelledby="q-title">
+    <div class="wrap">
+      <h2 class="q-lines" id="q-title">
+        <span class="q1" data-speed="0.08">We look at our planet every day.</span>
+        <span data-speed="0.03">How much of its change</span>
+        <span data-speed="-0.03">do we <em class="s">actually see?</em></span>
+      </h2>
+      <div class="facts">
+        <div class="fact"><span class="lbl">Orbit</span><span class="num">705<small>km</small></span><p>Altitude of NASA's Terra satellite, home of the MODIS instrument ECHO draws on.</p></div>
+        <div class="fact"><span class="lbl">Resolution</span><span class="num">250<small>m / pixel</small></span><p>Detail enough to follow a river as it changes course.</p></div>
+        <div class="fact"><span class="lbl">Revisit</span><span class="num">1–2<small>days</small></span><p>Time for MODIS to image the entire planet.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mission" id="mission" aria-labelledby="m-title">
+    <div class="wrap grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>Mission</span>
+        <h2 id="m-title">Make planetary change visible, understandable and open to <em class="s">everyone.</em></h2>
+        <div class="body">
+          <p>Satellites record the entire Earth every day. Little of that record reaches the people living with the change. ECHO makes it searchable, comparable and easy to question.</p>
+          <p>No expertise required. Choose a place, move through time, and read the evidence, including where it ends.</p>
+        </div>
+      </div>
+      <div class="figwrap">
+        <div class="ring" data-speed="0.14"></div>
+        <figure class="frame">
+          <img src="img/forest.webp" alt="A river running beneath a canopy of mangrove trees" data-speed="0.07" data-mode="inner">
+          <figcaption><span>Forests</span><span>Rivers</span><span>Coastlines</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="descent" id="descent" aria-label="How an investigation works, from orbit to the ground">
+    <div class="stage">
+      <div class="layer" id="L0"><img src="img/earth.webp" alt="" loading="lazy">
+        <div class="pins" aria-hidden="true"><i style="left:30%;top:66%"></i><i style="left:47%;top:60%"></i><i style="left:58%;top:73%"></i><i style="left:70%;top:63%"></i><i style="left:20%;top:78%"></i></div>
+      </div>
+      <div class="layer" id="L1">
+        <div class="box" id="box">
+          <img src="img/hills.webp" alt="" loading="lazy">
+          <svg class="aoi" viewBox="0 0 2400 1429" preserveAspectRatio="none" aria-hidden="true">
+            <path id="aoi" pathLength="1" d="M1262 1004 L1386 972 L1528 988 L1622 1036 L1600 1108 L1462 1136 L1318 1112 L1244 1062 Z"/>
+            <circle id="pt0" cx="1440" cy="1057" r="9"/><circle id="pt1" cx="1330" cy="1020" r="6"/><circle id="pt2" cx="1560" cy="1082" r="6"/>
+          </svg>
+        </div>
+      </div>
+      <div class="layer" id="L2"><img src="img/forest.webp" alt="" loading="lazy"></div>
+      <div class="tint"></div>
+      <div class="reticle" id="ret" aria-hidden="true">
+        <svg viewBox="0 0 180 180"><circle cx="90" cy="90" r="80" fill="none" stroke="#9af3c6" stroke-opacity=".6"/><circle cx="90" cy="90" r="58" fill="none" stroke="#9af3c6" stroke-opacity=".25" stroke-dasharray="3 7"/><path d="M90 0v22M90 158v22M0 90h22M158 90h22" stroke="#9af3c6" stroke-width="1.4"/><circle cx="90" cy="90" r="2.5" fill="#9af3c6"/></svg>
+      </div>
+      <div class="aoi-label" id="aoiLabel">Area of interest <span>· Illustrative</span></div>
+      <div class="hud" aria-hidden="true"><div class="wrap"><span>Altitude <b id="alt">705 km</b></span><span id="phase">Orbit</span></div></div>
+      <div class="rail" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="steps">
+        <div class="wrap">
+          <div class="step on"><div class="k">Orbit <span>01 / 04</span></div><h3>Begin with the whole planet.</h3><p>Open natural events from NASA EONET, on a live map of the Earth.</p></div>
+          <div class="step"><div class="k">Region <span>02 / 04</span></div><h3>Focus on a place.</h3><p>Daily true-colour imagery from NASA's MODIS and VIIRS instruments.</p></div>
+          <div class="step"><div class="k">Investigation <span>03 / 04</span></div><h3>Frame the question.</h3><p>Set an event window, compare dates and mark areas of interest. Illustrative overlays are always labelled.</p></div>
+          <div class="step"><div class="k">Ground <span>04 / 04</span></div><h3>Return to the ground.</h3><p>Every finding links to its source, with notes and next steps for verification.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features" aria-labelledby="f-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="dot"></span>Platform</span>
+        <h2 id="f-title">A field kit for a <em class="s">changing</em> planet.</h2>
+        <p>One shared core across web, desktop and mobile.</p>
+      </div>
+
+      <div class="feature">
+        <div class="copy">
+          <span class="eyebrow">Planet Pulse</span>
+          <h3>Live events, mapped.</h3>
+          <p>Wildfires, storms, volcanoes and floods from NASA EONET. Any event becomes an investigation in one tap.</p>
+          <ul class="ticks"><li>Newest developments first</li><li>Clustered pins; recent events pulse</li><li>Cached for offline use</li></ul>
+        </div>
+        <div class="viz">
+          <div class="bg"><img src="img/earth.webp" alt="" loading="lazy" data-speed="0.05" data-mode="inner"></div>
+          <div class="panel" role="img" aria-label="ECHO's New developments panel listing three NASA EONET events">
+            <div class="ph"><strong>New developments</strong><span class="live">NASA EONET</span></div>
+            <div class="chips"><span class="chip on">All</span><span class="chip">Wildfires</span><span class="chip">Severe storms</span><span class="chip">Volcanoes</span></div>
+            <div style="margin-top:10px">
+              <div class="ev"><span class="pin"></span><div><small>Wildfire · Idaho</small><b>Wildfire Buckhorn 2, Cassia</b></div></div>
+              <div class="ev"><span class="pin storm"></span><div><small>Severe storm</small><b>Hurricane Trudy</b></div></div>
+              <div class="ev"><span class="pin"></span><div><small>Wildfire · Arizona</small><b>Prescribed Fire Newman Piles RX, Coconino</b></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature flip">
+        <div class="copy">
+          <span class="eyebrow">Field Report</span>
+          <h3>Evidence, kept separate from interpretation.</h3>
+          <p>Each investigation produces a structured report: what was observed, what it may mean, and what remains unknown, each linked to its source.</p>
+          <ul class="ticks"><li>Evidence trail of imagery and reports</li><li>Investigation points with your notes</li><li>Export to Markdown or JSON</li></ul>
+        </div>
+        <div class="viz">
+          <div class="bg"><img src="img/hills.webp" alt="" loading="lazy" data-speed="0.05" data-mode="inner"></div>
+          <div class="panel" role="img" aria-label="ECHO's Field Report for the Nepal flash flood demo">
+            <div class="ph"><strong>Nepal · Flash flood</strong><span class="tag no">Demo</span></div>
+            <div class="rule"></div>
+            <div class="lab"><span>Interpretation</span><span>Evidence first</span></div>
+            <div class="claim"><span class="tag ok">Observed</span><p>ESA reports expanded river water in imagery.</p></div>
+            <div class="claim"><span class="tag in">To investigate</span><p>Inundation extent and affected assets need validation.</p></div>
+            <div class="claim"><span class="tag no">Not yet established</span><p>Damage totals, cause attribution, future risk.</p></div>
+            <div class="rule"></div>
+            <div class="lab"><span>Evidence trail</span><span>3 sources</span></div>
+            <div class="src"><span class="badge">ESA</span><span><b>Before / after satellite images</b><small>12 Aug vs 27 Aug</small></span></div>
+            <div class="src"><span class="badge">N</span><span><b>NASA GPM / IMERG</b><small>Satellite precipitation estimates</small></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="copy">
+          <span class="eyebrow">Explore</span>
+          <h3>Move through time.</h3>
+          <p>Step through dates and compare before and after across NASA MODIS and VIIRS true-colour imagery, with fire and rainfall layers on demand.</p>
+          <ul class="ticks"><li>Daily imagery via NASA GIBS</li><li>Notes pinned to the map, stored on your device</li><li>Shareable links to any report</li></ul>
+        </div>
+        <div class="viz">
+          <div class="bg"><img src="img/forest.webp" alt="" loading="lazy" data-speed="0.05" data-mode="inner"></div>
+          <div class="panel" role="img" aria-label="ECHO's time controls: a before and after comparison, an event window and map layers">
+            <div class="ph"><strong>Time machine</strong><span class="live m">Compare</span></div>
+            <div class="compare" aria-hidden="true">
+              <img src="img/hills.webp" alt="" loading="lazy">
+              <div class="half"><img src="img/hills.webp" alt="" loading="lazy"></div>
+              <span class="lb" style="left:10px">Before</span><span class="lb" style="right:10px">After</span>
+              <span class="knob">⇆</span>
+            </div>
+            <div class="days" aria-hidden="true"><i></i><i></i><i></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="win"></i><i class="mark"></i></div>
+            <div class="days-l"><span>Before</span><span>Event window</span><span>After</span></div>
+            <div class="rule"></div>
+            <div class="lr"><span>NASA date comparison<small>Daily MODIS true-colour</small></span><i class="sw on"></i></div>
+            <div class="lr"><span>Rainfall context<small>Satellite estimates</small></span><i class="sw"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="caps">
+        <div class="cap"><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2.5l1.6 4.4 4.4 1.6-4.4 1.6L10 14.5l-1.6-4.4L4 8.5l4.4-1.6z"/></svg></span><h4>Ask ECHO</h4><p>Guided research that works offline, with optional live AI answers through your own service.</p></div>
+        <div class="cap"><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 3.5h12v13H4z"/><path d="M7 7.5h6M7 10.5h6M7 13.5h3"/></svg></span><h4>Private notes</h4><p>Dated observations pinned to the map, stored only on your device.</p></div>
+        <div class="cap"><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14z" fill="currentColor" fill-opacity=".35"/></svg></span><h4>Day and night</h4><p>The night side of Earth, shaded from the Sun's position.</p></div>
+        <div class="cap"><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 13.5h15M5 13.5V5h10v8.5M8 16.5h4"/></svg></span><h4>Web, desktop, mobile</h4><p>Live on the web today. Desktop and mobile apps in development.</p></div>
+        <div class="cap"><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7.5a10 10 0 0 1 14 0M5.5 10.5a6.5 6.5 0 0 1 9 0M8.2 13.4a2.6 2.6 0 0 1 3.6 0"/><path d="M3 3l14 14"/></svg></span><h4>Offline-ready</h4><p>Saved work and the latest events stay available without a connection.</p></div>
+        <div class="cap"><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2.5 3.5 5v5c0 3.6 2.8 6.4 6.5 7.5 3.7-1.1 6.5-3.9 6.5-7.5V5z"/><path d="m7.5 10 1.8 1.8L13 8"/></svg></span><h4>Open data</h4><p>Built on open NASA and Esri services. No account required.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="evidence" id="evidence" aria-labelledby="e-title">
+    <div class="bgimg" data-speed="0.14"><img src="img/earth.webp" alt="" loading="lazy"></div>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="dot"></span>Principle</span>
+        <h2 id="e-title">Evidence <em class="s">first.</em></h2>
+        <p>Satellite imagery is easy to over-read. ECHO separates what the data shows from what still needs proof, on every screen.</p>
+      </div>
+      <div class="trio">
+        <article><span class="tag ok">Observed</span><h3>What the record shows.</h3><p>Reported by a named source or plainly visible in imagery, and linked for verification.</p><p class="ex">ESA reports expanded river water in imagery.</p></article>
+        <article><span class="tag in">Interpretation</span><h3>What it may mean.</h3><p>Reasoned readings, clearly marked and kept apart from the evidence.</p><p class="ex">Inundation extent needs processing and validation.</p></article>
+        <article><span class="tag no">Not known</span><h3>What remains open.</h3><p>Damage, cause and future risk stay unresolved until confirmed on the ground.</p><p class="ex">Damage totals, cause attribution, future risk.</p></article>
+      </div>
+      <p class="disclaim">ECHO is a research aid, not an alerting or mapping service. Imagery resolution is 250–375 m per pixel and cloud cover limits visibility. ECHO does not detect floods or deforestation; illustrative overlays are labelled.</p>
+    </div>
+  </section>
+
+  <section class="vision" id="vision" aria-labelledby="v-title">
+    <div class="v-bg" data-speed="0.2"><img src="img/hills.webp" alt="Green ridgelines rolling into the distance" loading="lazy"></div>
+    <div class="v-fade"></div>
+    <div class="v-orbit" data-speed="-0.1" data-mode="vorbit">
+      <svg viewBox="0 0 1000 1000" aria-hidden="true"><circle cx="500" cy="500" r="490" fill="none" stroke="#9af3c6" stroke-opacity=".18"/><circle cx="500" cy="500" r="380" fill="none" stroke="#9af3c6" stroke-opacity=".12" stroke-dasharray="2 10"/><circle cx="500" cy="500" r="270" fill="none" stroke="#ffffff" stroke-opacity=".08"/><circle cx="990" cy="500" r="5" fill="#e9fff4"/><circle cx="500" cy="120" r="3.5" fill="#9af3c6"/></svg>
+    </div>
+    <div class="wrap inner">
+      <span class="eyebrow"><span class="dot"></span>Vision</span>
+      <h2 id="v-title">Making our planet a little less <em class="s">mysterious.</em></h2>
+      <p class="sub">ECHO began as a design concept and became a working product. The ambition: an open, evidence-led way for anyone to investigate a changing world, on any device.</p>
+      <div class="platforms"><span class="now">Web · Live</span><span>Desktop · In development</span><span>iOS &amp; Android · In development</span></div>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://bandkoconnect-ui.github.io/From-space-for-earth/" target="_blank" rel="noopener">Open ECHO
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg></a>
+      </div>
+      <p class="sign">Built with curiosity · Designed for what comes next</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div style="display:grid;gap:14px">
+      <a class="brand" href="#top" style="justify-self:start">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><g transform="rotate(-24 32 32)"><ellipse cx="32" cy="32" rx="22" ry="11.5" fill="none" stroke="#9af3c6" stroke-width="2.4"/><circle cx="51" cy="27.6" r="2.6" fill="#e9fff4"/></g><circle cx="32" cy="32" r="8" fill="#9af3c6"/></svg>ECHO</a>
+      <p>Earth intelligence for everyone. © 2026 ECHO. All rights reserved.</p>
+    </div>
+    <div class="credits">
+      <p>Imagery and data in ECHO: NASA GIBS (MODIS, VIIRS), NASA EONET, Esri World Imagery.</p>
+      <p>Photography and the area-of-interest overlay on this page are illustrative.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => [...document.querySelectorAll(s)];
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const sm = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* star field */
+  const cv = $('#stars'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1, stars = [];
+  function seed() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    W = cv.width = Math.round(innerWidth * dpr); H = cv.height = Math.round(innerHeight * dpr);
+    let s = 1234567; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    stars = Array.from({ length: Math.round(innerWidth * innerHeight / 4200) }, () => {
+      const d = rnd(), depth = d < .62 ? 0 : d < .9 ? 1 : 2;
+      return { x: rnd(), y: rnd(), depth, r: [.5, .85, 1.35][depth] * (.7 + rnd() * .6), a: [.35, .6, .9][depth] * (.5 + rnd() * .5), tw: rnd() * 6.28, mint: rnd() < .08 };
+    });
+  }
+  const SP = [.03, .08, .16];
+  function drawStars(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (const st of stars) {
+      let y = (st.y * H - scrollY * SP[st.depth] * dpr) % H; if (y < 0) y += H;
+      ctx.globalAlpha = st.a * (reduce ? 1 : .75 + .25 * Math.sin(t * .0012 + st.tw));
+      ctx.fillStyle = st.mint ? '#bff8dc' : '#e8f0f8';
+      ctx.beginPath(); ctx.arc(st.x * W, y, st.r * dpr, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* hero satellite */
+  const path = $('#orbitpath'), sat = $('#satg'), plen = path.getTotalLength();
+  function drawSat(t) { const p = path.getPointAtLength(((t * .00004) % 1) * plen); sat.setAttribute('transform', `translate(${p.x} ${p.y})`); }
+
+  /* parallax */
+  const px = $$('[data-speed]').map(el => ({ el, k: parseFloat(el.dataset.speed), mode: el.dataset.mode || '' }));
+  function parallax() {
+    const vh = innerHeight;
+    const off = px.map(o => { const host = o.mode === 'inner' ? o.el.parentElement : o.el; const r = host.getBoundingClientRect(); return r.top + r.height / 2 - vh / 2; });
+    px.forEach((o, i) => {
+      const y = -off[i] * o.k;
+      if (o.mode === 'earth') o.el.style.transform = `translate(-50%, ${(-scrollY * o.k).toFixed(1)}px)`;
+      else if (o.mode === 'orbit') o.el.style.transform = `translate(-50%, calc(-50% + ${(scrollY * o.k).toFixed(1)}px)) rotate(${(-14 + scrollY * .006).toFixed(2)}deg)`;
+      else if (o.mode === 'vorbit') o.el.style.transform = `translate(-50%, calc(-50% + ${y.toFixed(1)}px)) rotate(${(-off[i] * .02).toFixed(2)}deg)`;
+      else o.el.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
+    });
+  }
+
+  /* descent: orbit -> region -> investigation -> ground */
+  const desc = $('#descent'), L0 = $('#L0'), L1 = $('#L1'), L2 = $('#L2');
+  const L0img = L0.querySelector('img'), L2img = L2.querySelector('img');
+  const box = $('#box'), ret = $('#ret'), label = $('#aoiLabel'), aoi = $('#aoi'), pts = $$('#box circle');
+  const steps = $$('.step'), ticks = $$('.rail i'), alt = $('#alt'), phase = $('#phase');
+  const AR = 2400 / 1429, TX = 1440 / 2400, TY = 1057 / 1429, ZMAX = 2.6;
+  const PH = ['Orbit', 'Region', 'Investigation', 'Ground'];
+  const ALT = [[0, 705], [1, 14], [2, 1.2], [3, 0.0004]];
+  let cur = -1;
+  function descent() {
+    const vw = innerWidth, vh = innerHeight, mobile = vw < 700;
+    const r = desc.getBoundingClientRect();
+    const t = clamp(-r.top / (r.height - vh)) * 3.4;            // 0 .. 3.4
+
+    // orbit layer: slow push-in, fades under the region
+    L0img.style.transform = reduce ? 'none' : `scale(${(1 + .25 * sm(0, 1.1, t)).toFixed(4)})`;
+    L0.style.opacity = (1 - sm(.75, 1.05, t)).toFixed(3);
+
+    // region / investigation: one photo, a real continuous zoom toward the area of interest
+    const bw = Math.max(vw, vh * AR), bh = bw / AR;
+    const tx = TX * bw, ty = TY * bh;
+    const zk = reduce ? (t > 1.6 ? 1 : 0) : sm(1.15, 2.05, t);
+    const zmax = vw < 700 ? Math.min(ZMAX, Math.max(1.3, (vw * .78) / (378 / 2400 * bw))) : ZMAX;
+    const z = lerp(1, zmax, zk) * (1 + .05 * clamp(t - 2.05, 0, 1.35));
+    const P0x = (vw - bw) / 2 + tx, P0y = (vh - bh) / 2 + ty;           // target where the photo sits naturally
+    const T3x = mobile ? vw * .5 : vw * .64, T3y = mobile ? vh * .36 : vh * .44;
+    let X = lerp(P0x, T3x, zk) - z * tx, Y = lerp(P0y, T3y, zk) - z * ty;
+    X = clamp(X, vw - z * bw, 0); Y = clamp(Y, vh - z * bh, 0);           // never show an edge
+    box.style.width = bw + 'px'; box.style.height = bh + 'px';
+    box.style.transform = `translate(${X.toFixed(1)}px, ${Y.toFixed(1)}px) scale(${z.toFixed(4)})`;
+    L1.style.opacity = (sm(.6, 1.0, t) * (1 - sm(2.55, 2.95, t))).toFixed(3);
+    const sx = X + z * tx, sy = Y + z * ty;                                // live screen position of the target
+
+    // overlay draws in during the investigation step
+    const d = sm(1.85, 2.3, t);
+    aoi.style.strokeDashoffset = (1 - d).toFixed(3);
+    aoi.style.fillOpacity = sm(2.15, 2.45, t).toFixed(3);
+    pts.forEach((c, i) => c.style.opacity = sm(2.0 + i * .08, 2.2 + i * .08, t).toFixed(3));
+    label.style.opacity = (sm(2.25, 2.45, t) * (1 - sm(2.55, 2.8, t))).toFixed(3);
+    label.style.transform = `translate(${(sx + (mobile ? -70 : 26) * 1).toFixed(1)}px, ${(sy + (mobile ? 40 : -64)).toFixed(1)}px)`;
+
+    // reticle: centred in orbit, locks onto the target as the zoom begins
+    const lock = sm(.7, 1.2, t);
+    const rx = lerp(vw / 2, sx, lock), ry = lerp(vh * .46, sy, lock);
+    const tight = sm(1.2, 2.05, t);
+    ret.style.transform = `translate(${rx.toFixed(1)}px, ${ry.toFixed(1)}px) scale(${(1.25 - .45 * tight).toFixed(3)})`;
+    ret.style.opacity = ((.55 + .45 * sm(.2, .9, t)) * (1 - sm(2.45, 2.75, t))).toFixed(3);
+
+    // ground
+    L2.style.opacity = sm(2.55, 2.95, t).toFixed(3);
+    L2img.style.transform = reduce ? 'none' : `scale(${(1.12 - .1 * sm(2.55, 3.4, t)).toFixed(4)})`;
+
+    // captions, rail, HUD
+    const idx = t < .8 ? 0 : t < 1.75 ? 1 : t < 2.6 ? 2 : 3;
+    if (idx !== cur) { steps.forEach((s, i) => s.classList.toggle('on', i === idx)); phase.textContent = PH[idx]; cur = idx; }
+    const bounds = [0, .8, 1.75, 2.6, 3.4];
+    ticks.forEach((k, i) => k.style.setProperty('--f', clamp((t - bounds[i]) / (bounds[i + 1] - bounds[i])).toFixed(3)));
+    const a = Math.min(2.999, t), i0 = Math.floor(a), f = sm(0, 1, a - i0);
+    const km = Math.exp(lerp(Math.log(ALT[i0][1]), Math.log(ALT[i0 + 1][1]), f));
+    alt.textContent = km >= 10 ? `${Math.round(km)} km` : km >= 1 ? `${km.toFixed(1)} km` : `${Math.round(km * 1000)} m`;
+  }
+
+  const nav = $('#nav');
+  let ticking = false;
+  function frame() { ticking = false; nav.classList.toggle('solid', scrollY > 40); descent(); if (!reduce) parallax(); else drawStars(0); }
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }, { passive: true });
+  addEventListener('resize', () => { seed(); frame(); });
+  seed(); frame(); drawStars(0);
+  if (!reduce) { const loop = (t) => { drawStars(t); drawSat(t); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  else drawSat(9000);
+})();
+</script>
+</body>
+</html>

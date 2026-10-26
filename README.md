@@ -11,6 +11,8 @@ This repository holds three ways to use ECHO, built on one shared core:
 | Interface | The map is the whole screen: red pins for live NASA events, a floating search and discovery panel, and a Field Report that opens beside the map (bottom sheets on phones) | Three-pane workspace with menus, keyboard shortcuts and window memory | Map-first screen with a draggable bottom sheet and a bottom tab bar |
 | Code | `index.html` and `apps/web` | `apps/desktop` | `apps/mobile` |
 
+**The ECHO website** (the story of the product: mission, how it works, vision) is `website/index.html`, served at https://bandkoconnect-ui.github.io/From-space-for-earth/website/.
+
 **The web app is what GitHub Pages serves** at https://bandkoconnect-ui.github.io/From-space-for-earth/. How to deploy it, which services it uses (none need a key), and its limits are in [docs/WEB_APP.md](docs/WEB_APP.md).
 
 Shared by all three: `packages/core` (investigations, storage, dates, imagery catalogue, event feed, chat, reports; plain JavaScript with unit tests), `packages/map` (the Leaflet map with before/after compare), `packages/ui` (DOM helpers, artwork, common styles).
